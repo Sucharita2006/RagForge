@@ -1,0 +1,54 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+frontend/.env*.local
+next-env.d.ts
+*.tsbuildinfo
+
+# --- Secrets / env ---
+.env
+.env.*
+!.env.example
+
+# --- Docker / volumes ---
+*.log
+pgdata/
+redisdata/
+
+# --- Models & large artifacts (never commit weights/blobs) ---
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+models_cache/
+huggingface_cache/
+.ollama/
+
+# --- Benchmark scratch (large downloaded datasets, not source) ---
+benchmarks/data/
+*.parquet
+*.npy
+*.npz
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Alembic ---
+backend/alembic/versions/__pycache__/
