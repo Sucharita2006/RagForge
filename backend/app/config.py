@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     GEN_MODEL: str = "qwen3:4b-instruct"
     GEN_TEMPERATURE: float = 0.1
     MAX_OUTPUT_TOKENS: int = 1024
+    # Ollama defaults to a 4096-token context window regardless of what the
+    # model actually supports; must cover MAX_CONTEXT_TOKENS + system prompt/
+    # JSON-schema overhead + MAX_OUTPUT_TOKENS or generation 400s.
+    OLLAMA_NUM_CTX: int = 8192
+    # CPU inference of a large context is slow (implementation-plan.md §2.E4
+    # profile tradeoff) — generous timeout rather than a false-negative ReadTimeout.
+    GEN_TIMEOUT_SECONDS: float = 600.0
 
     # Optional free-tier hybrid path: judge / testset-gen / enrichment only (DECISIONS.md)
     GOOGLE_API_KEY: str | None = None
@@ -36,6 +43,7 @@ class Settings(BaseSettings):
     MINICHECK_MODEL: str = "lytang/MiniCheck-RoBERTa-Large"
 
     # --- Ingestion / chunking (SPEC.md §7.1) ---
+    UPLOAD_DIR: str = "/app/data/uploads"
     CHUNK_SIZE: int = 512
     CHUNK_OVERLAP: int = 64
     PARENT_CHUNK_SIZE: int = 2048
@@ -55,9 +63,12 @@ class Settings(BaseSettings):
     HNSW_M: int = 16
     HNSW_EF_CONSTRUCTION: int = 200
     HNSW_EF_SEARCH: int = 80
-    HNSW_ITERATIVE_SCAN: str = "relaxed_order"  # off | strict_order | relaxed_order
+    # off | strict_order | relaxed_order — inert until Phase 2 adds filtered queries
+    HNSW_ITERATIVE_SCAN: str = "relaxed_order"
     HNSW_MAX_SCAN_TUPLES: int = 20000
-    EMBEDDING_STORAGE: str = "halfvec"  # vector | halfvec
+    # Phase 1 baseline-v0 uses plain float32 `vector` on purpose, so the Phase 2
+    # migration to `halfvec` is a measured before/after, not an unmeasured start.
+    EMBEDDING_STORAGE: str = "vector"  # vector | halfvec
 
     # --- Semantic cache ---
     SEMANTIC_CACHE_THRESHOLD: float = 0.92

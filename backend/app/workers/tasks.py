@@ -1,3 +1,8 @@
+import asyncio
+import uuid
+
+from app.db.session import engine
+from app.ingestion.pipeline import ingest_document
 from app.workers.celery_app import celery_app
 
 
@@ -5,3 +10,21 @@ from app.workers.celery_app import celery_app
 def ping() -> str:
     """Phase 0 smoke-test task; real jobs land phase-by-phase (ingest/finetune/eval/redteam)."""
     return "pong"
+
+
+async def _ingest_and_dispose(document_id: str, file_path: str) -> None:
+    # Each Celery task call gets its own asyncio.run() (own event loop), but
+    # the async engine's connection pool is a module-level singleton created
+    # once at worker startup — a pooled connection from one task's loop
+    # can't be reused once that loop closes (asyncpg ties connections to the
+    # loop they were created on). Disposing here forces the next task to
+    # open fresh connections on its own loop instead of reusing stale ones.
+    try:
+        await ingest_document(uuid.UUID(document_id), file_path)
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="ingest_document", bind=True, max_retries=0)
+def ingest_document_task(self, document_id: str, file_path: str) -> None:
+    asyncio.run(_ingest_and_dispose(document_id, file_path))

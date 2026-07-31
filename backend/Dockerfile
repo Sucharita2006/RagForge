@@ -4,11 +4,17 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl \
+    libgl1 libglib2.0-0 libxcb1 libxext6 libsm6 libxrender1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -e ".[dev]"
+RUN pip install --no-cache-dir --upgrade pip
+# CPU-only torch wheel (~200MB) instead of PyPI's default CUDA-bundled one
+# (~530MB, and repeatedly stalled mid-download through Docker Desktop's
+# network layer on this machine) — also just correct for our CPU-only
+# profile (implementation-plan.md §3), no CUDA runtime we'd ever use.
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -e ".[dev]"
 
 COPY . .
 

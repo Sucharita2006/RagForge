@@ -1,0 +1,45 @@
+{
+  "experiment": "baseline-v0",
+  "phase": 1,
+  "description": "Dense-only baseline (SPEC.md Phase 1 exit criteria): Docling parsing, bge-small-en-v1.5 embeddings, pgvector HNSW cosine search, no sparse/RRF/reranking yet (Phase 2). Every improvement from here on is measured as a delta vs this config (SPEC.md §7.2).",
+  "measured_at": "2026-07-31",
+  "corpus": {
+    "documents": 40,
+    "chunks": 1492,
+    "total_pages": 707,
+    "source": "arXiv LLM/RAG papers, discovered via arXiv API (scripts/seed_demo_corpus.py)",
+    "parser": "docling (100% of documents, 0 pypdf fallbacks)"
+  },
+  "golden_set": {
+    "path": "eval-datasets/v0/mini.jsonl",
+    "n_items": 22,
+    "n_answerable": 20,
+    "n_unanswerable": 2,
+    "note": "unanswerable items are not scored by scripts/run_eval.py yet — abstention lands in Phase 4"
+  },
+  "config": {
+    "embedding_provider": "bge_small",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "embedding_dim": 384,
+    "embedding_storage": "vector",
+    "chunk_size": 512,
+    "chunk_overlap": 64,
+    "dense_top_k": 50,
+    "max_context_tokens": 6000,
+    "hnsw_m": 16,
+    "hnsw_ef_construction": 200,
+    "hnsw_ef_search": 80,
+    "generation_model": "qwen3:4b-instruct",
+    "generation_provider": "ollama"
+  },
+  "metrics": {
+    "hit_rate@10": 1.0,
+    "mrr": 0.935,
+    "ndcg@10": 0.9508891280403,
+    "n_questions": 20
+  },
+  "generation_latency_observed_seconds": {
+    "note": "CPU inference on the 8GB local profile (implementation-plan.md §2.E), full ~6000-token context, non-streaming. Not yet optimized — that's Phase 2/8.",
+    "samples": [64, 79, 101, 107, 127, 214, 332, 406]
+  }
+}

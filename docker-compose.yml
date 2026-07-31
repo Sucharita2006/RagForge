@@ -42,12 +42,15 @@ services:
       - .env
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - hf_cache:/root/.cache/huggingface
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -57,12 +60,17 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    volumes:
+      - ./backend:/app
+      - hf_cache:/root/.cache/huggingface
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A app.workers.celery_app worker --loglevel=info
+    # solo pool, single process: avoids loading a second copy of the embedding
+    # model into memory on this 8GB-RAM machine (implementation-plan.md §3)
+    command: celery -A app.workers.celery_app worker --loglevel=info --pool=solo --concurrency=1
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -80,3 +88,4 @@ services:
 volumes:
   pgdata:
   redisdata:
+  hf_cache:

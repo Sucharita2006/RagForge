@@ -7,11 +7,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from app.config import get_settings
+from app.models import answers, chunks, documents, queries  # noqa: F401
 from app.models.base import Base
-
-# Import all model modules here as they're added (Phase 1+) so
-# Base.metadata is complete for autogenerate, e.g.:
-#   from app.models import documents, chunks, queries, answers  # noqa: F401
 
 config = context.config
 

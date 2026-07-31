@@ -44,6 +44,10 @@ benchmarks/data/
 *.npy
 *.npz
 
+# --- Uploaded/seeded source documents (raw PDFs, not source code) ---
+backend/data/
+/data/
+
 # --- IDE / OS ---
 .vscode/
 .idea/
