@@ -5,6 +5,8 @@ from pydantic import BaseModel
 
 class QueryRequest(BaseModel):
     question: str
+    session_id: str | None = None
+    """Client-generated id grouping a conversation, enabling query rewrite (Phase 2)."""
 
 
 class ClaimOut(BaseModel):
@@ -20,3 +22,5 @@ class QueryResponse(BaseModel):
     trace_id: str | None
     model: str
     latency_ms: int | None
+    cache_hit: bool = False
+    rewritten_question: str | None = None

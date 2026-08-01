@@ -1,7 +1,7 @@
 import uuid
 
 from app.models.chunks import Chunk
-from app.retrieval.assembly import assemble_context
+from app.retrieval.assembly import assemble_context, reorder_lost_in_the_middle
 
 
 def make_chunk(content: str, token_count: int) -> Chunk:
@@ -46,3 +46,28 @@ def test_assemble_context_empty_input() -> None:
     context, used = assemble_context([], max_context_tokens=100)
     assert context == ""
     assert used == []
+
+
+def test_reorder_lost_in_the_middle_puts_best_at_edges_worst_in_middle() -> None:
+    """Best-ranked chunks should end up at the start *and* end of the
+    sequence; the lowest-ranked chunk should land in the middle, where LLM
+    attention over long contexts tends to be weakest (SPEC.md §3.2 step 7)."""
+    chunks = [make_chunk(name, 10) for name in ["1st", "2nd", "3rd", "4th", "5th"]]
+    reordered = reorder_lost_in_the_middle(chunks)
+    contents = [c.content for c in reordered]
+    assert contents[0] == "1st"
+    assert contents[-1] == "2nd"
+    assert contents[len(contents) // 2] == "5th"  # worst-ranked buried in the middle
+
+
+def test_reorder_lost_in_the_middle_preserves_all_chunks() -> None:
+    chunks = [make_chunk(str(i), 10) for i in range(6)]
+    reordered = reorder_lost_in_the_middle(chunks)
+    assert {c.content for c in reordered} == {c.content for c in chunks}
+    assert len(reordered) == len(chunks)
+
+
+def test_reorder_lost_in_the_middle_empty_and_single() -> None:
+    assert reorder_lost_in_the_middle([]) == []
+    single = [make_chunk("only", 10)]
+    assert reorder_lost_in_the_middle(single) == single

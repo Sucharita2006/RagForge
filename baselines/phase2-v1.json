@@ -1,0 +1,150 @@
+{
+  "metrics": {
+    "hit_rate@10": 1.0,
+    "mrr": 0.975,
+    "ndcg@10": 0.9815464876785729,
+    "n_questions": 20
+  },
+  "per_question": [
+    {
+      "question": "How does chain-of-thought prompting improve large language models' performance on multi-step reasoning tasks?",
+      "expected_arxiv_id": "2201.11903v6",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How does the Fusion-in-Decoder approach combine multiple retrieved passages for open-domain question answering?",
+      "expected_arxiv_id": "2007.01282v2",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "What are control codes and how does CTRL use them to govern the style and content of generated text?",
+      "expected_arxiv_id": "1909.05858v2",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "What is contrastive chain-of-thought prompting and how does it differ from standard chain-of-thought prompting?",
+      "expected_arxiv_id": "2311.09277v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "question": "How does PAIR leverage passage-centric similarity relations to improve dense passage retrieval?",
+      "expected_arxiv_id": "2108.06027v2",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "What is a graph foundation model and how is it used for retrieval-augmented generation in GFM-RAG?",
+      "expected_arxiv_id": "2502.01113v3",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How is GPT-4 used to generate instruction-following data for instruction tuning in this paper?",
+      "expected_arxiv_id": "2304.03277v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "What is the FinGPT instruction tuning benchmark designed to evaluate in open-source large language models?",
+      "expected_arxiv_id": "2310.04793v2",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "What tasks and evaluation methodology does the TREC 2025 Retrieval-Augmented Generation track use?",
+      "expected_arxiv_id": "2603.09891v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How does the collaborative multi-agent approach improve retrieval-augmented generation?",
+      "expected_arxiv_id": "2412.05838v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "What does FAIR-RAG's faithful adaptive iterative refinement process do?",
+      "expected_arxiv_id": "2510.22344v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How is retrieval-augmented generation applied to Quranic studies in this paper?",
+      "expected_arxiv_id": "2503.16581v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "What is membership inference and how is it applied as a stealthy attack against retrieval-augmented generation systems?",
+      "expected_arxiv_id": "2502.00306v2",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How does this paper automate literature review using NLP techniques and large language models?",
+      "expected_arxiv_id": "2411.18583v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "What is a learned index and how does LIDER use it for high-dimensional large-scale similarity search?",
+      "expected_arxiv_id": "2205.00970v3",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How does using multiple positive passages improve dense passage retrieval training?",
+      "expected_arxiv_id": "2508.09534v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How is dense passage retrieval applied to cohort retrieval in this paper?",
+      "expected_arxiv_id": "2507.01049v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How does this paper prune and skip experts efficiently in mixture-of-experts models?",
+      "expected_arxiv_id": "2402.14800v2",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How does alignment improve large language models' reasoning ability in this paper?",
+      "expected_arxiv_id": "2309.02144v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "question": "How is polynomial regression used as a task to understand in-context learning in transformers?",
+      "expected_arxiv_id": "2407.19346v1",
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg@10": 1.0
+    }
+  ]
+}

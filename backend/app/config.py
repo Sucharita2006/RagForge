@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: str | None = None
     JUDGE_PROVIDER: str = "ollama"  # ollama | gemini
     JUDGE_MODEL: str = "gemini-2.5-pro"
+    GEMINI_FLASH_MODEL: str = "gemini-2.5-flash"
+    """Lighter-weight Gemini tier for enrichment/testset-gen (vs. JUDGE_MODEL's Pro tier)."""
 
     # --- Embeddings / reranker (DECISIONS.md 2026-07-30: 8GB CPU profile) ---
     EMBEDDING_PROVIDER: str = "bge_small"  # bge_small | bge_m3 | gemini
@@ -44,6 +46,10 @@ class Settings(BaseSettings):
 
     # --- Ingestion / chunking (SPEC.md §7.1) ---
     UPLOAD_DIR: str = "/app/data/uploads"
+    # Docling's OCR fallback (RapidOCR) has no internal timeout and can run
+    # effectively unbounded on an image-heavy scanned PDF on CPU — falls
+    # back to pypdf if exceeded, same as any other Docling failure.
+    DOCLING_TIMEOUT_SECONDS: float = 300.0
     CHUNK_SIZE: int = 512
     CHUNK_OVERLAP: int = 64
     PARENT_CHUNK_SIZE: int = 2048
@@ -63,12 +69,13 @@ class Settings(BaseSettings):
     HNSW_M: int = 16
     HNSW_EF_CONSTRUCTION: int = 200
     HNSW_EF_SEARCH: int = 80
-    # off | strict_order | relaxed_order — inert until Phase 2 adds filtered queries
+    # off | strict_order | relaxed_order — neutralizes pgvector's documented
+    # post-filter under-return bug for the document_id filter (Phase 2).
     HNSW_ITERATIVE_SCAN: str = "relaxed_order"
     HNSW_MAX_SCAN_TUPLES: int = 20000
-    # Phase 1 baseline-v0 uses plain float32 `vector` on purpose, so the Phase 2
-    # migration to `halfvec` is a measured before/after, not an unmeasured start.
-    EMBEDDING_STORAGE: str = "vector"  # vector | halfvec
+    # Phase 1 baseline-v0 measured plain float32 `vector`; Phase 2 migrates to
+    # `halfvec` (0004_halfvec_migration.py) as a measured before/after.
+    EMBEDDING_STORAGE: str = "halfvec"  # vector | halfvec
 
     # --- Semantic cache ---
     SEMANTIC_CACHE_THRESHOLD: float = 0.92
