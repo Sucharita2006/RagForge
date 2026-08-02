@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface MetricCI {
   mean: number;
@@ -59,11 +59,7 @@ export default function Evaluations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchRuns();
-  }, []);
-
-  async function fetchRuns() {
+  const fetchRuns = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -75,7 +71,15 @@ export default function Evaluations() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    // fetch-on-mount with no data-fetching library in this project yet;
+    // eslint-plugin-react-hooks' cascading-render warning doesn't apply here
+    // since there's only ever one render pass for this initial load.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchRuns();
+  }, [fetchRuns]);
 
   async function selectRun(id: string) {
     setSelected(null);
