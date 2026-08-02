@@ -64,11 +64,20 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install system libs for Docling's table model (cv2/opencv)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libglib2.0-0 libxcb1 libxext6 libsm6 libxrender1
+
       - name: Cache HuggingFace models
         uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
           key: hf-cache-bge-small-minilm
+
+      - name: Install CPU-only torch (avoid pulling ~1.5GB of CUDA/cuDNN/NCCL wheels)
+        run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
       - name: Install backend (with dev deps)
         run: pip install -e ".[dev]"
