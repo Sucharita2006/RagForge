@@ -8,14 +8,18 @@ from app.providers.llm.base import LLMProvider, LLMResult
 
 
 class OllamaProvider(LLMProvider):
-    def __init__(self) -> None:
+    def __init__(self, timeout: float | None = None) -> None:
         settings = get_settings()
         self._base_url = settings.OLLAMA_BASE_URL
         self._model = settings.GEN_MODEL
         self._temperature = settings.GEN_TEMPERATURE
         self._max_tokens = settings.MAX_OUTPUT_TOKENS
         self._num_ctx = settings.OLLAMA_NUM_CTX
-        self._timeout = settings.GEN_TIMEOUT_SECONDS
+        # eval runs are background/non-interactive and can tolerate a much
+        # longer per-call budget than the live-query default - found live,
+        # a real ReadTimeout on a large multi-hop context killed an entire
+        # eval run at GEN_TIMEOUT_SECONDS=600 (DECISIONS.md 2026-08-02).
+        self._timeout = timeout if timeout is not None else settings.GEN_TIMEOUT_SECONDS
         self._budget_guard = BudgetGuard()
 
     @property

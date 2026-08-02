@@ -1,9 +1,13 @@
 import asyncio
 import uuid
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 
-from app.db.session import engine
+from app.db.session import async_session_maker, engine
+from app.evals.runner import execute_eval_run
 from app.ingestion.pipeline import ingest_document, reingest_document
+from app.providers.embeddings.bge_small import get_embedding_provider
+from app.providers.llm.ollama import OllamaProvider
 from app.workers.celery_app import celery_app
 
 
@@ -36,3 +40,34 @@ def ingest_document_task(self, document_id: str, file_path: str) -> None:
 @celery_app.task(name="reingest_document", bind=True, max_retries=0)
 def reingest_document_task(self, document_id: str, file_path: str) -> None:
     asyncio.run(_run_and_dispose(reingest_document, document_id, file_path))
+
+
+async def _run_eval_and_dispose(
+    run_id: str, dataset_path: str, full_pipeline_ids: list[str] | None
+) -> None:
+    try:
+        async with async_session_maker() as db:
+            embedder = get_embedding_provider()
+            # eval runs are background/non-interactive - a much longer
+            # per-call budget than the live-query default absorbs slow
+            # multi-hop-context generations instead of ReadTimeout-ing
+            # (DECISIONS.md 2026-08-02; per-item failures are also now
+            # isolated in execute_eval_run regardless).
+            llm = OllamaProvider(timeout=1200.0)
+            await execute_eval_run(
+                db,
+                uuid.UUID(run_id),
+                Path(dataset_path),
+                embedder,
+                llm,
+                set(full_pipeline_ids) if full_pipeline_ids is not None else None,
+            )
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="run_eval", bind=True, max_retries=0)
+def run_eval_task(
+    self, run_id: str, dataset_path: str, full_pipeline_ids: list[str] | None = None
+) -> None:
+    asyncio.run(_run_eval_and_dispose(run_id, dataset_path, full_pipeline_ids))

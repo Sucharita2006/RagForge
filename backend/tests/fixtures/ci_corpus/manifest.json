@@ -1,0 +1,38 @@
+[
+  {
+    "external_id": "ci-fixture-llamas",
+    "title": "Llama Husbandry Basics",
+    "lines": [
+      "Llamas are domesticated South American camelids, related to alpacas.",
+      "A typical adult llama weighs between 130 and 200 kilograms.",
+      "Llamas are commonly used as pack animals due to their strength and endurance."
+    ]
+  },
+  {
+    "external_id": "ci-fixture-sourdough",
+    "title": "Sourdough Bread Fundamentals",
+    "lines": [
+      "Sourdough bread relies on a natural fermentation starter of flour and water.",
+      "The starter culture contains wild yeast and lactic acid bacteria.",
+      "A mature sourdough starter typically takes five to seven days to develop."
+    ]
+  },
+  {
+    "external_id": "ci-fixture-lighthouses",
+    "title": "Coastal Lighthouse Design",
+    "lines": [
+      "Lighthouses use a rotating Fresnel lens to project light over long distances.",
+      "The Fresnel lens was invented in 1822 by Augustin-Jean Fresnel.",
+      "Modern lighthouses are largely automated and require minimal staffing."
+    ]
+  },
+  {
+    "external_id": "ci-fixture-volcanoes",
+    "title": "Volcanic Eruption Classification",
+    "lines": [
+      "The Volcanic Explosivity Index rates eruptions on a scale from 0 to 8.",
+      "Effusive eruptions produce slow-moving lava flows rather than explosions.",
+      "Stratovolcanoes are steep-sided, built from alternating lava and ash layers."
+    ]
+  }
+]

@@ -1,45 +1,82 @@
 {
-  "experiment": "baseline-v0",
-  "phase": 1,
-  "description": "Dense-only baseline (SPEC.md Phase 1 exit criteria): Docling parsing, bge-small-en-v1.5 embeddings, pgvector HNSW cosine search, no sparse/RRF/reranking yet (Phase 2). Every improvement from here on is measured as a delta vs this config (SPEC.md §7.2).",
-  "measured_at": "2026-07-31",
+  "experiment": "baseline-v1",
+  "phase": 3,
+  "description": "First harness-computed baseline on curated golden-set v1 (117 items), measured against the full Phase 2 hybrid pipeline (dense + sparse + RRF fusion + MiniLM cross-encoder rerank, parent-chunk expansion) and self-hosted generation/judging (qwen3:4b-instruct via Ollama for both, per the 2026-08-01 self-hosted-only decision). Every future retrieval/generation change is measured as a delta vs this config (SPEC.md §7.2); evals.yml's CI gate compares PR metrics to this file.",
+  "measured_at": "2026-08-02",
+  "eval_run_id": "36e6c13a-d907-4b69-a337-1d0626f707aa",
+  "eval_run_duration": "2026-08-01T22:13:19Z to 2026-08-02T06:14:24Z (~8h1m, CPU-only local profile)",
   "corpus": {
     "documents": 40,
-    "chunks": 1492,
-    "total_pages": 707,
-    "source": "arXiv LLM/RAG papers, discovered via arXiv API (scripts/seed_demo_corpus.py)",
-    "parser": "docling (100% of documents, 0 pypdf fallbacks)"
+    "chunks": 1895,
+    "source": "arXiv LLM/RAG papers, discovered via arXiv API (scripts/seed_demo_corpus.py)"
   },
   "golden_set": {
-    "path": "eval-datasets/v0/mini.jsonl",
-    "n_items": 22,
-    "n_answerable": 20,
-    "n_unanswerable": 2,
-    "note": "unanswerable items are not scored by scripts/run_eval.py yet — abstention lands in Phase 4"
+    "path": "eval-datasets/v1/full.jsonl",
+    "version": "v1",
+    "n_items": 117,
+    "composition": {
+      "single_hop": 55,
+      "multi_hop": 29,
+      "unanswerable": 23,
+      "adversarial": 10
+    },
+    "note": "target composition was ~120/55/30/25/10; landed at 23 unanswerable after dedup (see DECISIONS.md 2026-08-01 on GEN_TEMPERATURE=0.1 diversity collapse). Generated + judged fully self-hosted (qwen3:4b-instruct), not Gemini as originally planned."
+  },
+  "full_pipeline_subset": {
+    "n_items": 39,
+    "path": "backend/data/full_pipeline_ids.json",
+    "note": "generation+judge metrics (faithfulness/answer_correctness/context_precision/context_recall/abstention) computed on every 3rd item of the pre-shuffled full.jsonl, stratified by construction (DECISIONS.md 2026-08-01). Retrieval metrics (hit_rate/MRR/NDCG@10) computed on all 117 items — cheap, no generation needed."
   },
   "config": {
     "embedding_provider": "bge_small",
     "embedding_model": "BAAI/bge-small-en-v1.5",
     "embedding_dim": 384,
-    "embedding_storage": "vector",
+    "embedding_storage": "halfvec",
     "chunk_size": 512,
     "chunk_overlap": 64,
+    "parent_chunk_size": 2048,
     "dense_top_k": 50,
+    "sparse_top_k": 50,
+    "rrf_k": 60,
+    "reranker_provider": "minilm",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "rerank_candidates": 50,
+    "final_top_k": 8,
     "max_context_tokens": 6000,
     "hnsw_m": 16,
     "hnsw_ef_construction": 200,
     "hnsw_ef_search": 80,
     "generation_model": "qwen3:4b-instruct",
-    "generation_provider": "ollama"
+    "generation_provider": "ollama",
+    "generation_temperature": 0.1,
+    "judge_model": "qwen3:4b-instruct",
+    "judge_provider": "ollama"
   },
   "metrics": {
-    "hit_rate@10": 1.0,
-    "mrr": 0.935,
-    "ndcg@10": 0.9508891280403,
-    "n_questions": 20
+    "hit_rate": {"n": 84, "mean": 0.9880952380952381, "ci_low": 0.9642857142857143, "ci_high": 1.0},
+    "reciprocal_rank": {"n": 84, "mean": 0.9387046485260772, "ci_low": 0.8942743764172336, "ci_high": 0.977891156462585},
+    "ndcg@10": {"n": 84, "mean": 0.9504920747063734, "ci_low": 0.9127680621952964, "ci_high": 0.9832761052437649},
+    "faithfulness": {"n": 18, "mean": 0.4555555555555555, "ci_low": 0.25555555555555554, "ci_high": 0.6555555555555556},
+    "answer_correctness": {"n": 18, "mean": 0.6499999999999999, "ci_low": 0.4666666666666667, "ci_high": 0.8166666666666667},
+    "context_precision": {"n": 18, "mean": 0.7222222222222222, "ci_low": 0.5166666666666667, "ci_high": 0.8944444444444445},
+    "context_recall": {"n": 18, "mean": 0.4166666666666667, "ci_low": 0.2111111111111111, "ci_high": 0.6166666666666667},
+    "abstained": {"n": 39, "mean": 0.48717948717948717, "ci_low": 0.3333333333333333, "ci_high": 0.6410256410256411},
+    "abstention_correct": {"n": 39, "mean": 0.7435897435897436, "ci_low": 0.5897435897435898, "ci_high": 0.8717948717948718},
+    "abstention_recall_unanswerable": {"n": 9, "mean": 1.0, "ci_low": 1.0, "ci_high": 1.0},
+    "answered_precision": {"n": 20, "mean": 1.0, "ci_low": 1.0, "ci_high": 1.0},
+    "adversarial_safe": {"n": 4, "mean": 0.75, "ci_low": 0.25, "ci_high": 1.0},
+    "latency_ms": {"n": 117, "mean": 163897.36752136753, "ci_low": 121431.28205128205, "ci_high": 210067.07692307694, "note": "per-item wall clock including retrieval-only items (~seconds) and full-pipeline items (generation+judge, 150-450s+ each) mixed together — not a query-latency SLO number, see SPEC.md §7.2's separate p95 latency gate (not yet measured, load-test only)"}
   },
-  "generation_latency_observed_seconds": {
-    "note": "CPU inference on the 8GB local profile (implementation-plan.md §2.E), full ~6000-token context, non-streaming. Not yet optimized — that's Phase 2/8.",
-    "samples": [64, 79, 101, 107, 127, 214, 332, 406]
+  "vs_spec_targets": {
+    "note": "SPEC.md §7.2 targets vs this baseline, for visibility — not all targets are CI-gated yet (evals.yml gates hard-fail only on hit_rate/NDCG@10 per the fixture-corpus smoke test; the full golden-set-v1 regression rule in this file is the source of truth for future manual/local comparisons per DECISIONS.md 2026-08-01).",
+    "hit_rate@8": {"target": 0.85, "measured": 0.988, "meets_target": true},
+    "ndcg@10": {"target": 0.75, "measured": 0.950, "meets_target": true},
+    "context_precision": {"target": 0.70, "measured": 0.722, "meets_target": true},
+    "context_recall": {"target": 0.75, "measured": 0.417, "meets_target": false},
+    "faithfulness": {"target": 0.85, "measured": 0.456, "meets_target": false},
+    "answer_correctness": {"target": 0.75, "measured": 0.65, "meets_target": false},
+    "abstention_recall_unanswerable": {"target": 0.80, "measured": 1.0, "meets_target": true},
+    "answered_precision": {"target": 0.90, "measured": 1.0, "meets_target": true},
+    "judge_metrics_caveat": "faithfulness/context_recall/answer_correctness fall short of SPEC.md targets — expected, and consistent with the 2026-08-01 decision to stay fully self-hosted: the spec explicitly names the 4B local model as weakest at exactly the judge and testset-generation jobs. Retrieval metrics (hit_rate/NDCG@10/context_precision) and abstention behavior, which don't depend on judge quality, all meet or exceed target. Revisit judge metrics if/when a stronger judge (e.g. Gemini) is wired in — no harness changes needed, just a re-run."
   }
 }

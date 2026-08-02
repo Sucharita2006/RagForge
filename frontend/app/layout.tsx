@@ -28,6 +28,12 @@ export default function RootLayout({
           >
             Retrieval Inspector
           </Link>
+          <Link
+            href="/evaluations"
+            className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          >
+            Evaluations
+          </Link>
         </nav>
         {children}
       </body>

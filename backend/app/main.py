@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.documents import router as documents_router
+from app.api.eval import router as eval_router
 from app.api.health import router as health_router
 from app.api.ingest import router as ingest_router
 from app.api.query import router as query_router
@@ -26,6 +27,7 @@ def create_app() -> FastAPI:
     app.include_router(documents_router, prefix="/api")
     app.include_router(query_router, prefix="/api")
     app.include_router(retrieve_router, prefix="/api")
+    app.include_router(eval_router, prefix="/api")
 
     return app
 

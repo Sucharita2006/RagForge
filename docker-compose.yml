@@ -44,6 +44,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - ./eval-datasets:/app/eval-datasets
       - hf_cache:/root/.cache/huggingface
     depends_on:
       postgres:
@@ -62,6 +63,7 @@ services:
       - .env
     volumes:
       - ./backend:/app
+      - ./eval-datasets:/app/eval-datasets
       - hf_cache:/root/.cache/huggingface
     depends_on:
       postgres:

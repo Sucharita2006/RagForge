@@ -1,0 +1,5 @@
+{"id": "ci_001", "type": "single_hop", "question": "How much does a typical adult llama weigh?", "expected_arxiv_ids": ["ci-fixture-llamas"], "reference_answer": "Between 130 and 200 kilograms.", "unanswerable": false}
+{"id": "ci_002", "type": "single_hop", "question": "What two microorganisms does a sourdough starter culture contain?", "expected_arxiv_ids": ["ci-fixture-sourdough"], "reference_answer": "Wild yeast and lactic acid bacteria.", "unanswerable": false}
+{"id": "ci_003", "type": "single_hop", "question": "Who invented the Fresnel lens used in lighthouses, and when?", "expected_arxiv_ids": ["ci-fixture-lighthouses"], "reference_answer": "Augustin-Jean Fresnel, in 1822.", "unanswerable": false}
+{"id": "ci_004", "type": "single_hop", "question": "What scale is used to rate the explosivity of volcanic eruptions?", "expected_arxiv_ids": ["ci-fixture-volcanoes"], "reference_answer": "The Volcanic Explosivity Index, rated 0 to 8.", "unanswerable": false}
+{"id": "ci_005", "type": "unanswerable", "question": "What is the average lifespan of a bottlenose dolphin in captivity?", "expected_arxiv_ids": [], "reference_answer": null, "unanswerable": true}

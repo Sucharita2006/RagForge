@@ -1,0 +1,106 @@
+name: evals
+
+# Fast, per-PR retrieval regression gate (SPEC.md §8.7, amended per
+# DECISIONS.md 2026-08-01): runs the real ingest -> embed -> dense+sparse
+# ->  RRF -> rerank pipeline end-to-end against a tiny synthetic fixture
+# corpus, hard-failing on a retrieval regression (C3: deterministic
+# metrics only - no LLM/judge in this job, since a free GitHub-hosted
+# runner can't feasibly host Ollama or the real 40-document corpus).
+#
+# This is NOT the SPEC.md §7.2 golden-set-v1 + baselines/baseline.json
+# regression rule - that needs the real corpus and a local LLM, and runs
+# manually/locally via POST /api/eval/run against the persistent dev
+# stack. See DECISIONS.md and document/phase-3-evals.md for the full
+# rationale on why these are two different, complementary checks.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  retrieval-smoke-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ragforge
+          POSTGRES_PASSWORD: ragforge
+          POSTGRES_DB: ragforge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ragforge"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://ragforge:ragforge@localhost:5432/ragforge
+      REDIS_URL: redis://localhost:6379/0
+      UPLOAD_DIR: ${{ github.workspace }}/backend/data/uploads
+      # our hand-rolled fixture PDFs sometimes read as "scanned" to
+      # Docling's layout model and fall into its OCR path (found live,
+      # see DECISIONS.md) - a short timeout keeps the always-correct
+      # pypdf fallback fast instead of waiting out the full 300s default.
+      DOCLING_TIMEOUT_SECONDS: "10"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache HuggingFace models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-cache-bge-small-minilm
+
+      - name: Install backend (with dev deps)
+        run: pip install -e ".[dev]"
+
+      - name: Run migrations
+        run: alembic upgrade head
+
+      - name: Generate CI fixture corpus
+        run: python scripts/generate_ci_fixtures.py
+
+      - name: Start API server
+        run: |
+          mkdir -p "$UPLOAD_DIR"
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > api.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/health && break
+            sleep 1
+          done
+
+      - name: Start Celery worker
+        run: |
+          nohup celery -A app.workers.celery_app worker --loglevel=info --pool=solo --concurrency=1 > worker.log 2>&1 &
+          sleep 3
+
+      - name: Ingest CI fixture corpus
+        run: python scripts/ingest_ci_fixtures.py
+
+      - name: Run retrieval smoke gate
+        run: python scripts/run_ci_eval_gate.py
+
+      - name: Show API/worker logs on failure
+        if: failure()
+        run: |
+          echo "--- api.log ---"; cat api.log || true
+          echo "--- worker.log ---"; cat worker.log || true
