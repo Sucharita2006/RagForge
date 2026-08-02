@@ -19,10 +19,14 @@ from pathlib import Path
 import httpx
 
 API_BASE = "http://localhost:8000/api"
-# scripts/ -> /app inside the container, where eval-datasets/ is mounted
-# directly (docker-compose.yml); on the host this is backend/scripts/../../eval-datasets
+# evals.yml runs this bare on the runner (working-directory: backend), so
+# eval-datasets/ (a repo-root-level sibling of backend/, not a child of it)
+# needs three .parent hops from scripts/run_ci_eval_gate.py, matching
+# generate_ci_fixtures.py's REPO_ROOT convention - not two (found live: two
+# hops resolves to backend/eval-datasets/, which doesn't exist, so this
+# always crashed with FileNotFoundError in real CI - see DECISIONS.md).
 GOLDEN_PATH = (
-    Path(__file__).resolve().parent.parent / "eval-datasets" / "ci-fixture" / "golden.jsonl"
+    Path(__file__).resolve().parent.parent.parent / "eval-datasets" / "ci-fixture" / "golden.jsonl"
 )
 
 

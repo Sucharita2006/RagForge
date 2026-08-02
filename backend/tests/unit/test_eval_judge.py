@@ -18,7 +18,9 @@ def test_parse_judge_scores_extracts_all_fields() -> None:
 
 
 def test_parse_judge_scores_clamps_out_of_range_values() -> None:
-    text = "FAITHFULNESS: 1.5\nANSWER_CORRECTNESS: -0.2\nCONTEXT_PRECISION: 0.5\nCONTEXT_RECALL: 0.5"
+    text = (
+        "FAITHFULNESS: 1.5\nANSWER_CORRECTNESS: -0.2\nCONTEXT_PRECISION: 0.5\nCONTEXT_RECALL: 0.5"
+    )
     scores = parse_judge_scores(text)
     assert scores["faithfulness"] == 1.0
     assert scores["answer_correctness"] == 0.0
