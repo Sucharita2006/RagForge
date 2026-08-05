@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from app.config import get_settings
-from app.models import answers, chunks, documents, evals, queries  # noqa: F401
+from app.models import answers, chunks, documents, evals, queries, settings  # noqa: F401
 from app.models.base import Base
 
 config = context.config

@@ -12,6 +12,11 @@ class EvalRunRequest(BaseModel):
     full_pipeline_ids: list[str] | None = None
     """If set, only these question ids get generation+judge; every other
     item still gets retrieval metrics. Overrides `full_pipeline`."""
+    llm_provider: str = "ollama"
+    """'ollama' (self-hosted, default) | 'gemini' (needs GOOGLE_API_KEY) |
+    'openrouter' (needs OPENROUTER_API_KEY) - lets a long full-pipeline run
+    swap off local CPU/RAM without changing production /query's provider
+    (DECISIONS.md 2026-08-03, 2026-08-06)."""
 
 
 class EvalRunOut(BaseModel):

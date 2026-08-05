@@ -36,14 +36,18 @@ async def start_eval_run(req: EvalRunRequest, db: AsyncSession = Depends(get_db)
     run = EvalRun(
         name=req.name,
         dataset_version=req.dataset_version,
-        config={"full_pipeline": req.full_pipeline, "full_pipeline_ids": full_pipeline_ids},
+        config={
+            "full_pipeline": req.full_pipeline,
+            "full_pipeline_ids": full_pipeline_ids,
+            "llm_provider": req.llm_provider,
+        },
         status="running",
     )
     db.add(run)
     await db.commit()
     await db.refresh(run)
 
-    run_eval_task.delay(str(run.id), str(dataset_path), full_pipeline_ids)
+    run_eval_task.delay(str(run.id), str(dataset_path), full_pipeline_ids, req.llm_provider)
     return run
 
 

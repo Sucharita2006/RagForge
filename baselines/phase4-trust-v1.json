@@ -1,0 +1,114 @@
+{
+  "experiment": "trust-v1",
+  "phase": 4,
+  "description": "First baseline with the Phase 4 trust layer active: MiniCheck per-claim verification, weighted confidence scoring, and calibrated confidence-gated abstention (SPEC.md §3.3). NOT directly comparable to baselines/baseline.json (phase 3) on generation/judge metrics — this run's generation ran on a hosted free-tier model (OpenRouter ling-3.0-flash) rather than self-hosted qwen3:4b-instruct, forced by a local-memory ceiling (DECISIONS.md 2026-08-04/06). Retrieval metrics ARE comparable (same corpus, same retrieval pipeline, no generation involved) and are the intended regression signal.",
+  "measured_at": "2026-08-05",
+  "eval_run_id": "d248ecbc-6693-478a-9d4f-d70567336ee2",
+  "eval_run_duration": "2026-08-05T19:08:47Z to 2026-08-05T20:14:46Z (~1h6m)",
+  "corpus": {
+    "documents": 40,
+    "chunks": 1895,
+    "source": "arXiv LLM/RAG papers, discovered via arXiv API (scripts/seed_demo_corpus.py)"
+  },
+  "golden_set": {
+    "path": "eval-datasets/v1/full.jsonl",
+    "version": "v1",
+    "n_items": 117,
+    "composition": {
+      "single_hop": 55,
+      "multi_hop": 29,
+      "unanswerable": 23,
+      "adversarial": 10
+    }
+  },
+  "completeness": {
+    "items_completed": 110,
+    "items_failed": 7,
+    "failed_ids": ["si_030", "un_115", "si_076", "un_109", "un_114", "ad_032", "mu_004"],
+    "failure_cause": "OpenRouter free tier's 50-requests/day cap, hit near the end of the run after 32 of the 39 full-pipeline items had already completed. GeminiProvider/OpenRouterProvider both retry 429s with exponential backoff (4 attempts), which handles per-minute limits but cannot recover from a daily cap. Per-item failure isolation (DECISIONS.md 2026-08-02) kept the run completing and aggregating from the 110 successes rather than discarding everything.",
+    "note": "Every metric below carries its own `n`, so the shortfall is visible per-metric rather than hidden in a single headline count."
+  },
+  "config": {
+    "embedding_provider": "bge_small",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "embedding_dim": 384,
+    "embedding_storage": "halfvec",
+    "chunk_size": 512,
+    "chunk_overlap": 64,
+    "parent_chunk_size": 2048,
+    "dense_top_k": 50,
+    "sparse_top_k": 50,
+    "rrf_k": 60,
+    "reranker_provider": "minilm",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "rerank_candidates": 50,
+    "final_top_k": 8,
+    "max_context_tokens": 6000,
+    "hnsw_m": 16,
+    "hnsw_ef_construction": 200,
+    "hnsw_ef_search": 80,
+    "generation_provider": "openrouter",
+    "generation_model": "inclusionai/ling-3.0-flash:free",
+    "judge_provider": "ollama",
+    "judge_model": "qwen3:4b-instruct",
+    "minicheck_model": "lytang/MiniCheck-RoBERTa-Large",
+    "minicheck_support_threshold": 0.5,
+    "confidence_weights": {
+      "claim_support": 0.5,
+      "retrieval": 0.3,
+      "sufficiency": 0.2
+    },
+    "abstain_threshold": 0.01,
+    "abstain_threshold_source": "calibration run a04927ff-0a36-4450-87a0-df6accb0a210 (2026-08-03), fit on eval-datasets/v1/calibration.jsonl targeting >=0.90 answered-precision (SPEC.md §8.5)"
+  },
+  "metrics": {
+    "hit_rate": {"n": 81, "mean": 0.9876543209876543, "ci_low": 0.9629629629629629, "ci_high": 1.0},
+    "reciprocal_rank": {"n": 81, "mean": 0.9364344503233393, "ci_low": 0.8904320987654321, "ci_high": 0.9768518518518519},
+    "ndcg@10": {"n": 81, "mean": 0.9486584478436465, "ci_low": 0.9100049940958509, "ci_high": 0.9824361035052919},
+    "faithfulness": {"n": 18, "mean": 0.48888888888888893, "ci_low": 0.33055555555555555, "ci_high": 0.6611111111111111},
+    "answer_correctness": {"n": 18, "mean": 0.7694444444444444, "ci_low": 0.6277777777777778, "ci_high": 0.8861111111111111},
+    "context_precision": {"n": 18, "mean": 0.5166666666666667, "ci_low": 0.3361111111111111, "ci_high": 0.6916666666666667},
+    "context_recall": {"n": 18, "mean": 0.5361111111111111, "ci_low": 0.35277777777777775, "ci_high": 0.7305555555555556},
+    "unsupported_claim_rate": {"n": 19, "mean": 0.39807283359914936, "ci_low": 0.2701754385964912, "ci_high": 0.524946836788942},
+    "confidence": {"n": 32, "mean": 0.3505885059129917, "ci_low": 0.2380063767017246, "ci_high": 0.45844505595952806},
+    "abstained": {"n": 32, "mean": 0.40625, "ci_low": 0.25, "ci_high": 0.59375},
+    "abstention_correct": {"n": 32, "mean": 0.78125, "ci_low": 0.625, "ci_high": 0.90625},
+    "abstention_recall_unanswerable": {"n": 6, "mean": 1.0, "ci_low": 1.0, "ci_high": 1.0},
+    "answered_precision": {"n": 19, "mean": 1.0, "ci_low": 1.0, "ci_high": 1.0},
+    "adversarial_safe": {"n": 3, "mean": 1.0, "ci_low": 1.0, "ci_high": 1.0},
+    "latency_ms": {"n": 110, "mean": 30106.98181818182, "ci_low": 18108.036363636365, "ci_high": 44155.15454545455, "note": "per-item wall clock mixing retrieval-only items (seconds) with full-pipeline items (generation + MiniCheck verification + judge). Not a query-latency SLO number."}
+  },
+  "vs_spec_targets": {
+    "note": "SPEC.md §7.2 targets vs this run. Phase 4's own exit criteria are unsupported_claim_rate <= 0.05 and abstention recall >= 0.80 on the unanswerable subset.",
+    "hit_rate@8": {"target": 0.85, "measured": 0.988, "meets_target": true},
+    "ndcg@10": {"target": 0.75, "measured": 0.949, "meets_target": true},
+    "context_precision": {"target": 0.70, "measured": 0.517, "meets_target": false},
+    "context_recall": {"target": 0.75, "measured": 0.536, "meets_target": false},
+    "faithfulness": {"target": 0.85, "measured": 0.489, "meets_target": false},
+    "answer_correctness": {"target": 0.75, "measured": 0.769, "meets_target": true},
+    "unsupported_claim_rate": {"target": 0.05, "measured": 0.398, "meets_target": false, "direction": "lower is better"},
+    "abstention_recall_unanswerable": {"target": 0.80, "measured": 1.0, "meets_target": true},
+    "answered_precision": {"target": 0.90, "measured": 1.0, "meets_target": true}
+  },
+  "phase_4_exit_criteria": {
+    "abstention_recall_unanswerable": {
+      "target": ">= 0.80",
+      "measured": 1.0,
+      "n": 6,
+      "met": true,
+      "caveat": "n=6 unanswerable items reached the full pipeline before the daily quota cut the run short (the 39-item subset contained 9). A perfect 1.0 on n=6 has a wide true interval; the calibration run (2026-08-03) independently measured 23/23 unanswerable items correctly abstaining, which is the stronger evidence for this criterion."
+    },
+    "unsupported_claim_rate": {
+      "target": "<= 0.05",
+      "measured": 0.398,
+      "n": 19,
+      "met": false,
+      "analysis": "Missed by a wide margin, and reported as measured rather than adjusted. Two contributing factors, neither of which fully excuses it: (1) MiniCheck is a strict sentence-level entailment checker — a claim that paraphrases, aggregates across two chunks, or states something only implied by the source is marked unsupported even when a human would accept it; (2) the generator here is a free-tier hosted model that was not prompt-tuned against MiniCheck's notion of support. The metric is doing its job (it surfaces genuinely weakly-grounded claims); closing the gap is generation/prompt work, not a measurement fix, and is deferred rather than papered over."
+    }
+  },
+  "comparability": {
+    "retrieval_metrics": "Directly comparable to baselines/baseline.json (phase 3): same corpus, same retrieval pipeline, generation-independent. hit_rate 0.988 -> 0.988, NDCG@10 0.950 -> 0.949, MRR 0.939 -> 0.936 — all within noise, confirming the trust layer added no retrieval regression.",
+    "generation_and_judge_metrics": "NOT comparable to phase 3: different generation provider (openrouter/ling-3.0-flash vs ollama/qwen3:4b-instruct). Differences in faithfulness/answer_correctness/context_* reflect the model swap at least as much as the trust layer.",
+    "abstention_metrics": "NOT comparable to phase 3: phase 3 derived `abstained` from the generator's raw insufficient_context flag; phase 4 derives it from the calibrated confidence gate (a deliberate semantic change, DECISIONS.md 2026-08-03)."
+  }
+}

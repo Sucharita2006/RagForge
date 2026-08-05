@@ -23,6 +23,11 @@ dependencies = [
     "sentence-transformers>=3.3",
     "docling>=2.15",
     "pypdf>=5.1",
+    # Not on PyPI under this name (that name is squatted by an unrelated
+    # package) - installed straight from the upstream repo, pinned to a
+    # commit for reproducibility (implementation-plan.md §3: RoBERTa-Large
+    # variant, ~1.4GB, lazy-loaded in the worker).
+    "minicheck @ git+https://github.com/Liyan06/MiniCheck.git@b58b9fa69acbd1015ec970fa65dd752413a053d2",
 ]
 
 [project.optional-dependencies]

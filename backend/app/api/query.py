@@ -2,6 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends
 from opentelemetry import trace
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -9,18 +10,51 @@ from app.db.session import get_db
 from app.generation.generator import generate_answer
 from app.generation.prompts import PROMPT_VERSION
 from app.models.answers import Answer
+from app.models.documents import Document
 from app.models.queries import Query
 from app.providers.embeddings.bge_small import get_embedding_provider
 from app.providers.llm.ollama import OllamaProvider
 from app.retrieval.assembly import assemble_context, expand_to_parents
 from app.retrieval.cache import SemanticCache, get_corpus_version
+from app.retrieval.fusion import FusedCandidate
 from app.retrieval.pipeline import retrieve as run_retrieval_pipeline
 from app.retrieval.query_transform import fetch_recent_history, rewrite_query
-from app.schemas.query import ClaimOut, QueryRequest, QueryResponse
+from app.schemas.query import ClaimOut, QueryRequest, QueryResponse, SourceOut
+from app.trust.abstain import get_abstain_threshold, should_abstain
+from app.trust.claims import verify_claims
+from app.trust.confidence import compute_confidence
+from app.trust.minicheck import get_minicheck_provider
 
 router = APIRouter(tags=["query"])
 settings = get_settings()
 tracer = trace.get_tracer(__name__)
+
+
+async def _sources_for(db: AsyncSession, candidates: list[FusedCandidate]) -> list[SourceOut]:
+    """Top-level "which documents did we find" list (SPEC.md §3.3's
+    abstention response carries this even with no answer) - distinct from
+    each claim's own per-chunk citations."""
+    document_ids = list({c.chunk.document_id for c in candidates})
+    if not document_ids:
+        return []
+    result = await db.execute(select(Document).where(Document.id.in_(document_ids)))
+    docs_by_id = {d.id: d for d in result.scalars().all()}
+
+    sources: list[SourceOut] = []
+    seen_document_ids: set[uuid.UUID] = set()
+    for candidate in candidates:
+        doc = docs_by_id.get(candidate.chunk.document_id)
+        if doc is None or doc.id in seen_document_ids:
+            continue
+        seen_document_ids.add(doc.id)
+        sources.append(
+            SourceOut(
+                document_external_id=doc.external_id,
+                title=doc.title,
+                rerank_score=candidate.rerank_score,
+            )
+        )
+    return sources
 
 
 @router.post("/query", response_model=QueryResponse)
@@ -66,6 +100,9 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
                 answer_id=uuid.UUID(cached["answer_id"]),
                 claims=[ClaimOut(**c) for c in cached["claims"]],
                 insufficient_context=cached["insufficient_context"],
+                confidence=cached["confidence"],
+                abstained=cached["abstained"],
+                sources=[SourceOut(**s) for s in cached["sources"]],
                 trace_id=trace_id,
                 model=cached["model"],
                 latency_ms=cached["latency_ms"],
@@ -79,7 +116,8 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
             fused = await run_retrieval_pipeline(db, rewritten_text, query_embedding)
             retriever_span.set_attribute("retrieval.candidate_count", len(fused))
 
-        top_chunks = [f.chunk for f in fused[: settings.FINAL_TOP_K]]
+        top_candidates = fused[: settings.FINAL_TOP_K]
+        top_chunks = [c.chunk for c in top_candidates]
         expanded_chunks = await expand_to_parents(db, top_chunks)
         context, used_chunks = assemble_context(expanded_chunks, settings.MAX_CONTEXT_TOKENS)
         valid_chunk_ids = {str(chunk.id) for chunk in used_chunks}
@@ -92,10 +130,27 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
             llm_span.set_attribute("llm.token_count.prompt", raw["input_tokens"] or 0)
             llm_span.set_attribute("llm.token_count.completion", raw["output_tokens"] or 0)
 
+        with tracer.start_as_current_span(
+            "verify_claims", attributes={"openinference.span.kind": "EVALUATOR"}
+        ) as verify_span:
+            minicheck = get_minicheck_provider()
+            verified_claims = verify_claims(minicheck, answer.answer_sentences, used_chunks)
+            confidence = compute_confidence(
+                verified_claims, top_candidates, answer.insufficient_context
+            )
+            threshold = await get_abstain_threshold(db)
+            abstained = should_abstain(confidence, threshold)
+            verify_span.set_attribute("trust.confidence", confidence)
+            verify_span.set_attribute("trust.abstained", abstained)
+
+        sources = await _sources_for(db, top_candidates)
+
         answer_row = Answer(
             query_id=query_row.id,
-            claims=[c.model_dump() for c in answer.answer_sentences],
+            claims=[c.model_dump() for c in verified_claims],
             insufficient_context=answer.insufficient_context,
+            confidence=confidence,
+            abstained=abstained,
             model=llm.model_name,
             prompt_version=PROMPT_VERSION,
             input_tokens=raw["input_tokens"],
@@ -107,13 +162,20 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
         await db.commit()
         await db.refresh(answer_row)
 
-        claims_dump = [c.model_dump() for c in answer.answer_sentences]
+        # an abstention response carries no partial answer (SPEC.md §3.3) -
+        # the full verified claims still land in the DB row above for
+        # observability/eval, just not in what the user sees.
+        response_claims = [] if abstained else [ClaimOut(**c.model_dump()) for c in verified_claims]
+
         await cache.set(
             query_embedding,
             {
                 "answer_id": str(answer_row.id),
-                "claims": claims_dump,
+                "claims": [c.model_dump() for c in response_claims],
                 "insufficient_context": answer_row.insufficient_context,
+                "confidence": confidence,
+                "abstained": abstained,
+                "sources": [s.model_dump() for s in sources],
                 "model": answer_row.model,
                 "latency_ms": answer_row.latency_ms,
             },
@@ -123,8 +185,11 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
         return QueryResponse(
             query_id=query_row.id,
             answer_id=answer_row.id,
-            claims=[ClaimOut(**c) for c in claims_dump],
+            claims=response_claims,
             insufficient_context=answer_row.insufficient_context,
+            confidence=confidence,
+            abstained=abstained,
+            sources=sources,
             trace_id=trace_id,
             model=answer_row.model,
             latency_ms=answer_row.latency_ms,

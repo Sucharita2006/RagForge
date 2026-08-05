@@ -26,6 +26,10 @@ from app.providers.embeddings.base import EmbeddingProvider
 from app.providers.llm.base import LLMProvider
 from app.retrieval.assembly import assemble_context, expand_to_parents
 from app.retrieval.pipeline import retrieve as run_retrieval_pipeline
+from app.trust.abstain import get_abstain_threshold, should_abstain
+from app.trust.claims import verify_claims
+from app.trust.confidence import compute_confidence
+from app.trust.minicheck import MiniCheckProvider, get_minicheck_provider
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -59,6 +63,7 @@ async def run_item(
     embedder: EmbeddingProvider,
     llm: LLMProvider,
     judge: JudgeProvider,
+    minicheck: MiniCheckProvider,
     full_pipeline: bool,
 ) -> dict:
     """Retrieval for every item; generation + judge scoring only when
@@ -104,23 +109,30 @@ async def run_item(
         answer, raw = await generate_answer(llm, item.question, context, valid_chunk_ids)
         answer_text = " ".join(c.text for c in answer.answer_sentences)
 
+        verified_claims = verify_claims(minicheck, answer.answer_sentences, used_chunks)
+        confidence = compute_confidence(verified_claims, top_chunks, answer.insufficient_context)
+        threshold = await get_abstain_threshold(db)
+        abstained = should_abstain(confidence, threshold)
+
         answer_payload = {
             "text": answer_text,
             "insufficient_context": answer.insufficient_context,
             "model": llm.model_name,
             "latency_ms": raw["latency_ms"],
-            "claims": [c.model_dump() for c in answer.answer_sentences],
+            "claims": [c.model_dump() for c in verified_claims],
         }
-        metrics["abstained"] = answer.insufficient_context
-        metrics["abstention_correct"] = abstention_correct(
-            answer.insufficient_context, item.unanswerable
-        )
+        metrics["confidence"] = confidence
+        metrics["abstained"] = abstained
+        metrics["abstention_correct"] = abstention_correct(abstained, item.unanswerable)
+        if verified_claims:
+            unsupported = sum(1 for c in verified_claims if c.verdict == "unsupported")
+            metrics["unsupported_claim_rate"] = unsupported / len(verified_claims)
 
         if item.forbidden_strings:
             metrics["adversarial_safe"] = not violates_forbidden_strings(
                 answer_text, item.forbidden_strings
             )
-        elif not item.unanswerable and not answer.insufficient_context:
+        elif not item.unanswerable and not abstained:
             judge_scores = await judge.score(
                 item.id, item.question, context, answer_text, item.reference_answer
             )
@@ -138,24 +150,36 @@ async def run_item(
     }
 
 
-def aggregate_metrics(results: list[EvalResult], items_by_id: dict[str, GoldenItem]) -> dict:
+def aggregate_metrics(
+    completed: list[tuple[str, dict]], items_by_id: dict[str, GoldenItem]
+) -> dict:
     """Bootstrap CI per metric over every item where it was computed, plus
-    the two named subset metrics SPEC.md §7.2 gates on separately."""
+    the two named subset metrics SPEC.md §7.2 gates on separately.
+
+    `completed` is (question_id, metrics) pairs captured as plain data at
+    the moment each item succeeded - not `EvalResult` ORM objects, which a
+    *later* item's `db.rollback()` (per-item isolation, below) expires
+    right out from under every already-loaded object in the session,
+    including ones from earlier, already-successful iterations. Reading an
+    expired attribute outside an active async context raises
+    `sqlalchemy.exc.MissingGreenlet` - found live when a run-mid rate limit
+    triggered exactly this after 27 real per-item failures (DECISIONS.md
+    2026-08-04)."""
     per_metric: dict[str, list[float]] = {}
     unanswerable_abstained: list[float] = []
     answered_correctly: list[float] = []  # 1.0 if answered-and-answerable, for answered-precision
 
-    for result in results:
-        for key, value in result.metrics.items():
+    for question_id, metrics in completed:
+        for key, value in metrics.items():
             if isinstance(value, bool):
                 per_metric.setdefault(key, []).append(1.0 if value else 0.0)
             elif isinstance(value, int | float):
                 per_metric.setdefault(key, []).append(float(value))
 
-        item = items_by_id.get(result.question_id)
-        if item is None or "abstained" not in result.metrics:
+        item = items_by_id.get(question_id)
+        if item is None or "abstained" not in metrics:
             continue
-        abstained = bool(result.metrics["abstained"])
+        abstained = bool(metrics["abstained"])
         if item.unanswerable:
             unanswerable_abstained.append(1.0 if abstained else 0.0)
         if not abstained:
@@ -186,10 +210,11 @@ async def execute_eval_run(
     run = await db.get(EvalRun, run_id)
     assert run is not None
     judge = JudgeProvider(llm)
+    minicheck = get_minicheck_provider()
 
     items = load_golden_set(dataset_path)
     items_by_id = {item.id: item for item in items}
-    results: list[EvalResult] = []
+    completed: list[tuple[str, dict]] = []
     failures: list[str] = []
 
     # Per-item isolation: one slow/failing item (a real ReadTimeout on a
@@ -201,7 +226,7 @@ async def execute_eval_run(
     for item in items:
         try:
             full = full_pipeline_ids is None or item.id in full_pipeline_ids
-            outcome = await run_item(db, item, embedder, llm, judge, full)
+            outcome = await run_item(db, item, embedder, llm, judge, minicheck, full)
             eval_result = EvalResult(
                 run_id=run_id,
                 question_id=item.id,
@@ -213,7 +238,7 @@ async def execute_eval_run(
             )
             db.add(eval_result)
             await db.commit()
-            results.append(eval_result)
+            completed.append((item.id, outcome["metrics"]))
         except Exception:
             logger.exception("eval item %s failed", item.id)
             await db.rollback()
@@ -225,8 +250,8 @@ async def execute_eval_run(
     # on implicit lazy-refresh of a stale reference.
     run = await db.get(EvalRun, run_id)
     assert run is not None
-    run.metrics = aggregate_metrics(results, items_by_id)
-    run.status = "completed" if results else "failed"
+    run.metrics = aggregate_metrics(completed, items_by_id)
+    run.status = "completed" if completed else "failed"
     if failures:
         run.error = f"{len(failures)}/{len(items)} items failed: {failures}"
     run.finished_at = datetime.now(UTC)

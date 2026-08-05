@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import httpx
@@ -7,14 +8,19 @@ from app.providers.budget_guard import BudgetGuard
 from app.providers.llm.base import LLMProvider, LLMResult
 
 _API_BASE = "https://generativelanguage.googleapis.com/v1beta"
+_RETRY_STATUS_CODES = {429, 503}
+_MAX_RETRIES = 4
+_BACKOFF_BASE_SECONDS = 5.0
 
 
 class GeminiProvider(LLMProvider):
-    """Free-tier Google AI Studio key, used ONLY for judge/testset-gen/
-    contextual enrichment (DECISIONS.md 2026-07-30) — never for in-app query
-    generation, which stays on the self-hosted Ollama model. Talks to the
-    REST API directly via httpx rather than adding the google-genai SDK as a
-    dependency for three offline call-sites."""
+    """Free-tier Google AI Studio key. Used for judge/testset-gen/contextual
+    enrichment (DECISIONS.md 2026-07-30), and optionally as an eval run's
+    generation provider when local CPU/RAM is the constraint (DECISIONS.md
+    2026-08-03) — never for production /query, which stays on the
+    self-hosted Ollama model. Talks to the REST API directly via httpx
+    rather than adding the google-genai SDK as a dependency for these
+    offline call-sites."""
 
     def __init__(self, model: str | None = None) -> None:
         settings = get_settings()
@@ -28,11 +34,13 @@ class GeminiProvider(LLMProvider):
     def model_name(self) -> str:
         return self._model
 
-    async def generate(self, system: str, user: str) -> LLMResult:
-        await self._budget_guard.check_and_record_call("gemini")
-
-        start = time.monotonic()
-        async with httpx.AsyncClient(timeout=60.0) as client:
+    async def _post_with_retry(self, client: httpx.AsyncClient, system: str, user: str) -> dict:
+        """The free tier's per-minute quota is easy to exceed in a batch
+        loop (an eval run firing calls back-to-back hit this live, 27/39
+        items failing on 429 - DECISIONS.md 2026-08-04) - retry with
+        exponential backoff on 429/503 rather than surfacing the first
+        transient failure as a hard error."""
+        for attempt in range(_MAX_RETRIES + 1):
             resp = await client.post(
                 f"{_API_BASE}/models/{self._model}:generateContent",
                 params={"key": self._api_key},
@@ -41,8 +49,20 @@ class GeminiProvider(LLMProvider):
                     "contents": [{"parts": [{"text": user}]}],
                 },
             )
-            resp.raise_for_status()
-            data = resp.json()
+            if resp.status_code not in _RETRY_STATUS_CODES or attempt == _MAX_RETRIES:
+                resp.raise_for_status()
+                return dict(resp.json())
+            retry_after = resp.headers.get("retry-after")
+            delay = float(retry_after) if retry_after else _BACKOFF_BASE_SECONDS * (2**attempt)
+            await asyncio.sleep(delay)
+        raise AssertionError("unreachable")  # loop always returns or raises above
+
+    async def generate(self, system: str, user: str) -> LLMResult:
+        await self._budget_guard.check_and_record_call("gemini")
+
+        start = time.monotonic()
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            data = await self._post_with_retry(client, system, user)
         latency_ms = int((time.monotonic() - start) * 1000)
 
         text = data["candidates"][0]["content"]["parts"][0]["text"]

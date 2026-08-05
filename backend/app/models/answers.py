@@ -9,9 +9,8 @@ from app.models.base import Base
 
 
 class Answer(Base):
-    """SPEC.md §5 `answers` table (Phase 1 subset — `claims` entries carry only
-    {text, citations} until Phase 4 adds support_prob/verdict; confidence/
-    abstained columns land in Phase 4's trust layer)."""
+    """SPEC.md §5 `answers` table. `claims` entries carry
+    {text, citations, support_prob, verdict} as of Phase 4's trust layer."""
 
     __tablename__ = "answers"
 
@@ -21,6 +20,8 @@ class Answer(Base):
     )
     claims: Mapped[list[dict]] = mapped_column(JSONB, nullable=False)
     insufficient_context: Mapped[bool] = mapped_column(nullable=False, default=False)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    abstained: Mapped[bool] = mapped_column(nullable=False, default=False)
     model: Mapped[str] = mapped_column(String, nullable=False)
     prompt_version: Mapped[str] = mapped_column(String, nullable=False, default="v1")
     input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)

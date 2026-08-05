@@ -32,9 +32,17 @@ class Settings(BaseSettings):
     # Optional free-tier hybrid path: judge / testset-gen / enrichment only (DECISIONS.md)
     GOOGLE_API_KEY: str | None = None
     JUDGE_PROVIDER: str = "ollama"  # ollama | gemini
-    JUDGE_MODEL: str = "gemini-2.5-pro"
-    GEMINI_FLASH_MODEL: str = "gemini-2.5-flash"
+    JUDGE_MODEL: str = "gemini-pro-latest"
+    GEMINI_FLASH_MODEL: str = "gemini-flash-latest"
     """Lighter-weight Gemini tier for enrichment/testset-gen (vs. JUDGE_MODEL's Pro tier)."""
+
+    # Alternative free-tier eval-run generation provider (DECISIONS.md 2026-08-06):
+    # Gemini's free tier caps at 20 req/day *per model* for a fresh project - too
+    # low for a ~39-item full-pipeline eval run. OpenRouter's fresh-account free
+    # tier is 20 req/min + 50 req/day, enough for one run. Never used for
+    # production /query.
+    OPENROUTER_API_KEY: str | None = None
+    OPENROUTER_MODEL: str = "inclusionai/ling-3.0-flash:free"
 
     # --- Embeddings / reranker (DECISIONS.md 2026-07-30: 8GB CPU profile) ---
     EMBEDDING_PROVIDER: str = "bge_small"  # bge_small | bge_m3 | gemini
@@ -42,7 +50,9 @@ class Settings(BaseSettings):
     EMBEDDING_DIM: int = 384
     RERANKER_PROVIDER: str = "minilm"  # minilm | bge_v2_m3 | cohere
     RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
-    MINICHECK_MODEL: str = "lytang/MiniCheck-RoBERTa-Large"
+    # the `minicheck` package's own short alias (NOT a HF repo id) - it
+    # internally resolves this to lytang/MiniCheck-RoBERTa-Large.
+    MINICHECK_MODEL: str = "roberta-large"
 
     # --- Ingestion / chunking (SPEC.md §7.1) ---
     UPLOAD_DIR: str = "/app/data/uploads"

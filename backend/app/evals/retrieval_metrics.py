@@ -38,7 +38,6 @@ def violates_forbidden_strings(answer_text: str, forbidden_strings: list[str]) -
     return any(s.lower() in lowered for s in forbidden_strings)
 
 
-def abstention_correct(insufficient_context: bool, unanswerable: bool) -> bool:
-    """Correct behavior: abstain (insufficient_context=True) iff the item is
-    genuinely unanswerable."""
-    return insufficient_context == unanswerable
+def abstention_correct(abstained: bool, unanswerable: bool) -> bool:
+    """Correct behavior: abstain iff the item is genuinely unanswerable."""
+    return abstained == unanswerable

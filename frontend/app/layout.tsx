@@ -34,6 +34,12 @@ export default function RootLayout({
           >
             Evaluations
           </Link>
+          <Link
+            href="/settings"
+            className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          >
+            Settings
+          </Link>
         </nav>
         {children}
       </body>

@@ -44,7 +44,7 @@ def test_violates_forbidden_strings_case_insensitive() -> None:
 
 
 def test_abstention_correct_matrix() -> None:
-    assert abstention_correct(insufficient_context=True, unanswerable=True) is True
-    assert abstention_correct(insufficient_context=False, unanswerable=False) is True
-    assert abstention_correct(insufficient_context=True, unanswerable=False) is False
-    assert abstention_correct(insufficient_context=False, unanswerable=True) is False
+    assert abstention_correct(abstained=True, unanswerable=True) is True
+    assert abstention_correct(abstained=False, unanswerable=False) is True
+    assert abstention_correct(abstained=True, unanswerable=False) is False
+    assert abstention_correct(abstained=False, unanswerable=True) is False
