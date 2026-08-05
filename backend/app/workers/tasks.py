@@ -1,17 +1,28 @@
 import asyncio
+import logging
 import uuid
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 
+from opentelemetry import trace
+
+from app.config import get_settings
 from app.db.session import async_session_maker, engine
 from app.evals.runner import execute_eval_run
 from app.ingestion.pipeline import ingest_document, reingest_document
+from app.observability.monitor import (
+    check_faithfulness_drop,
+    sample_recent_answers,
+    score_sample_faithfulness,
+)
 from app.providers.embeddings.bge_small import get_embedding_provider
 from app.providers.llm.base import LLMProvider
 from app.providers.llm.gemini import GeminiProvider
 from app.providers.llm.ollama import OllamaProvider
 from app.providers.llm.openrouter import OpenRouterProvider
 from app.workers.celery_app import celery_app
+
+logger = logging.getLogger(__name__)
 
 
 def _build_eval_llm(llm_provider: str) -> LLMProvider:
@@ -91,3 +102,52 @@ def run_eval_task(
     llm_provider: str = "ollama",
 ) -> None:
     asyncio.run(_run_eval_and_dispose(run_id, dataset_path, full_pipeline_ids, llm_provider))
+
+
+async def _run_online_monitor(llm_provider: str) -> None:
+    """SPEC.md §3.8's nightly online monitor: judge-score a sample of real
+    production answers for faithfulness, emit the result as an EVALUATOR
+    span so it lands in the same time series the Traces/Analytics pages
+    read, and log an alert if it dropped vs the prior 7-day window."""
+    tracer = trace.get_tracer(__name__)
+    settings = get_settings()
+    try:
+        async with async_session_maker() as db:
+            sample = await sample_recent_answers(db, settings.ONLINE_MONITOR_SAMPLE_SIZE)
+            if not sample:
+                logger.info("online monitor: no recent non-abstained answers to score")
+                return
+
+            llm = _build_eval_llm(llm_provider)
+            scores = await score_sample_faithfulness(db, llm, sample)
+            if not scores:
+                logger.warning("online monitor: sampled %d answers, none scorable", len(sample))
+                return
+
+            mean_faithfulness = sum(scores) / len(scores)
+            alert = await check_faithfulness_drop(db, mean_faithfulness)
+
+        with tracer.start_as_current_span(
+            "online_monitor",
+            attributes={
+                "openinference.span.kind": "EVALUATOR",
+                "monitor.mean_faithfulness": mean_faithfulness,
+                "monitor.sample_size": len(scores),
+                "monitor.sampled_answers": len(sample),
+            },
+        ) as span:
+            if alert:
+                span.set_attribute("monitor.alert", alert)
+                logger.warning("online monitor ALERT: %s", alert)
+        logger.info(
+            "online monitor: mean faithfulness %.3f over %d scored answers",
+            mean_faithfulness,
+            len(scores),
+        )
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="run_online_monitor", bind=True, max_retries=0)
+def run_online_monitor_task(self, llm_provider: str = "ollama") -> None:
+    asyncio.run(_run_online_monitor(llm_provider))

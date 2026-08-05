@@ -12,6 +12,7 @@ from app.generation.prompts import PROMPT_VERSION
 from app.models.answers import Answer
 from app.models.documents import Document
 from app.models.queries import Query
+from app.observability.cost import compute_cost_usd
 from app.providers.embeddings.bge_small import get_embedding_provider
 from app.providers.llm.ollama import OllamaProvider
 from app.retrieval.assembly import assemble_context, expand_to_parents
@@ -95,6 +96,10 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
         if cached is not None:
             query_row.cache_hit = True
             await db.commit()
+            chain_span.set_attribute("query.cache_hit", True)
+            chain_span.set_attribute("query.abstained", bool(cached["abstained"]))
+            chain_span.set_attribute("query.confidence", float(cached["confidence"]))
+            chain_span.set_attribute("query.cost_usd", 0.0)  # served from cache, no LLM call
             return QueryResponse(
                 query_id=query_row.id,
                 answer_id=uuid.UUID(cached["answer_id"]),
@@ -129,6 +134,10 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
             answer, raw = await generate_answer(llm, rewritten_text, context, valid_chunk_ids)
             llm_span.set_attribute("llm.token_count.prompt", raw["input_tokens"] or 0)
             llm_span.set_attribute("llm.token_count.completion", raw["output_tokens"] or 0)
+            llm_span.set_attribute(
+                "llm.cost_usd",
+                compute_cost_usd(llm.model_name, raw["input_tokens"], raw["output_tokens"]),
+            )
 
         with tracer.start_as_current_span(
             "verify_claims", attributes={"openinference.span.kind": "EVALUATOR"}
@@ -142,6 +151,23 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
             abstained = should_abstain(confidence, threshold)
             verify_span.set_attribute("trust.confidence", confidence)
             verify_span.set_attribute("trust.abstained", abstained)
+            verify_span.set_attribute("trust.claim_count", len(verified_claims))
+            verify_span.set_attribute(
+                "trust.unsupported_claim_count",
+                sum(1 for c in verified_claims if c.verdict == "unsupported"),
+            )
+
+        # root-span attributes the Analytics page aggregates over (SPEC.md §3.8:
+        # cache hit rate, abstention rate, cost/query) - set on CHAIN so one
+        # query contributes exactly one row to each rate, regardless of how
+        # many child spans it produced.
+        chain_span.set_attribute("query.cache_hit", False)
+        chain_span.set_attribute("query.abstained", abstained)
+        chain_span.set_attribute("query.confidence", confidence)
+        chain_span.set_attribute(
+            "query.cost_usd",
+            compute_cost_usd(llm.model_name, raw["input_tokens"], raw["output_tokens"]),
+        )
 
         sources = await _sources_for(db, top_candidates)
 

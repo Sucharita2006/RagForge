@@ -35,6 +35,24 @@ export default function RootLayout({
             Evaluations
           </Link>
           <Link
+            href="/experiments"
+            className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          >
+            Experiments
+          </Link>
+          <Link
+            href="/traces"
+            className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          >
+            Traces
+          </Link>
+          <Link
+            href="/analytics"
+            className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          >
+            Analytics
+          </Link>
+          <Link
             href="/settings"
             className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
           >

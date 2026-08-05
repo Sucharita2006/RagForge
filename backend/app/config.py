@@ -98,8 +98,34 @@ class Settings(BaseSettings):
     CONFIDENCE_WEIGHT_SUFFICIENCY: float = 0.2
     ABSTAIN_THRESHOLD: float = 0.55
 
-    # --- Observability ---
-    OTEL_EXPORTER: str = "postgres"
+    # --- Observability (SPEC.md §3.8) ---
+    OTEL_EXPORTER: str = "postgres"  # postgres | none
+    SPAN_EXPORT_ENABLED: bool = True
+    """Kill switch for span persistence - unit tests and CI run with this off
+    so a test process never opens a second (sync) DB engine."""
+    ONLINE_MONITOR_SAMPLE_SIZE: int = 20
+    """Answers sampled per online-monitor run for judge-scored faithfulness."""
+    ONLINE_MONITOR_DROP_ALERT_POINTS: float = 5.0
+    """Log an alert if 7-day mean faithfulness falls this many points vs the prior window."""
+
+    # Per-1M-token prices (USD) for cost attribution on LLM/embedding spans.
+    # Self-hosted models are genuinely $0 marginal cost (local CPU), so the
+    # cost column is only meaningful for the hosted providers - kept explicit
+    # rather than implied, so a $0 total reads as "self-hosted", not "unmeasured".
+    COST_PER_1M_INPUT_TOKENS: dict[str, float] = {
+        "ollama": 0.0,
+        "bge_small": 0.0,
+        "gemini-flash-latest": 0.30,
+        "gemini-pro-latest": 1.25,
+        "openrouter": 0.0,  # `:free` tier models
+    }
+    COST_PER_1M_OUTPUT_TOKENS: dict[str, float] = {
+        "ollama": 0.0,
+        "bge_small": 0.0,
+        "gemini-flash-latest": 2.50,
+        "gemini-pro-latest": 10.00,
+        "openrouter": 0.0,
+    }
 
     # --- Budget guard (DECISIONS.md: caps the free-tier hybrid key) ---
     MAX_DAILY_LLM_CALLS: int = 500
