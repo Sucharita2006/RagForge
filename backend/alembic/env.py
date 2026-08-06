@@ -12,6 +12,7 @@ from app.models import (  # noqa: F401
     chunks,
     documents,
     evals,
+    learning,
     queries,
     settings,
     spans,

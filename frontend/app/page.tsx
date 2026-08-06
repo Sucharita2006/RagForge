@@ -56,6 +56,9 @@ export default function Playground() {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<QueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [rated, setRated] = useState<number | null>(null);
+  const [correction, setCorrection] = useState("");
+  const [showCorrection, setShowCorrection] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +66,9 @@ export default function Playground() {
     setLoading(true);
     setError(null);
     setResponse(null);
+    setRated(null);
+    setCorrection("");
+    setShowCorrection(false);
     try {
       const res = await fetch(`${API_URL}/api/query`, {
         method: "POST",
@@ -75,6 +81,26 @@ export default function Playground() {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function sendFeedback(rating: number, correctionText?: string) {
+    if (!response) return;
+    try {
+      const res = await fetch(`${API_URL}/api/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          answer_id: response.answer_id,
+          rating,
+          correction: correctionText || null,
+        }),
+      });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      setRated(rating);
+      setShowCorrection(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
@@ -152,6 +178,62 @@ export default function Playground() {
                   )}
                 </p>
               ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 border-t border-neutral-100 pt-3 text-xs dark:border-neutral-900">
+            {rated === null ? (
+              <>
+                <span className="text-neutral-500">Was this answer useful?</span>
+                <button
+                  onClick={() => sendFeedback(1)}
+                  className="rounded border border-neutral-300 px-2 py-1 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+                  aria-label="Rate answer as useful"
+                >
+                  👍
+                </button>
+                <button
+                  onClick={() => setShowCorrection(true)}
+                  className="rounded border border-neutral-300 px-2 py-1 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+                  aria-label="Rate answer as not useful"
+                >
+                  👎
+                </button>
+              </>
+            ) : (
+              <span className="text-neutral-500">
+                Thanks — feedback recorded {rated > 0 ? "👍" : "👎"}
+              </span>
+            )}
+          </div>
+
+          {showCorrection && rated === null && (
+            <div className="flex flex-col gap-2">
+              <label htmlFor="correction" className="text-xs text-neutral-500">
+                What should it have said? (optional — a correction lets this become a training
+                pair; a bare 👎 only feeds failure clustering)
+              </label>
+              <textarea
+                id="correction"
+                className="rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+                rows={3}
+                value={correction}
+                onChange={(e) => setCorrection(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => sendFeedback(-1, correction)}
+                  className="rounded bg-neutral-900 px-3 py-1 text-xs text-white dark:bg-neutral-100 dark:text-neutral-900"
+                >
+                  Submit
+                </button>
+                <button
+                  onClick={() => sendFeedback(-1)}
+                  className="rounded border border-neutral-300 px-3 py-1 text-xs dark:border-neutral-700"
+                >
+                  Skip correction
+                </button>
+              </div>
             </div>
           )}
 

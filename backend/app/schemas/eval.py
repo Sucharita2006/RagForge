@@ -12,6 +12,9 @@ class EvalRunRequest(BaseModel):
     full_pipeline_ids: list[str] | None = None
     """If set, only these question ids get generation+judge; every other
     item still gets retrieval metrics. Overrides `full_pipeline`."""
+    reranker_model_id: uuid.UUID | None = None
+    """Score a specific registry model instead of the active one. Required to
+    A/B a *candidate* before promoting it (Phase 6)."""
     llm_provider: str = "ollama"
     """'ollama' (self-hosted, default) | 'gemini' (needs GOOGLE_API_KEY) |
     'openrouter' (needs OPENROUTER_API_KEY) - lets a long full-pipeline run

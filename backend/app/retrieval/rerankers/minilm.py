@@ -23,6 +23,13 @@ class MiniLMReranker(RerankerProvider):
 
 
 @lru_cache
-def get_reranker_provider() -> RerankerProvider:
-    """Process-wide singleton so the model is loaded into memory once (8GB-RAM profile)."""
-    return MiniLMReranker()
+def get_reranker_provider(model_name: str | None = None) -> RerankerProvider:
+    """Process-wide singleton *per model path*, so each distinct model is
+    loaded into memory once (8GB-RAM profile).
+
+    Keyed by `model_name` so promoting a fine-tuned reranker (Phase 6) swaps
+    the loaded model without a redeploy, while still never re-loading the
+    same weights twice. `None` keeps the config default for callers that
+    don't resolve through the registry (e.g. the CI fixture gate).
+    """
+    return MiniLMReranker(model_name)

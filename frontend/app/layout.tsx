@@ -53,6 +53,12 @@ export default function RootLayout({
             Analytics
           </Link>
           <Link
+            href="/learning"
+            className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          >
+            Learning
+          </Link>
+          <Link
             href="/settings"
             className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
           >

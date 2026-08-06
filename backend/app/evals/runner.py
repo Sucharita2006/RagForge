@@ -65,13 +65,16 @@ async def run_item(
     judge: JudgeProvider,
     minicheck: MiniCheckProvider,
     full_pipeline: bool,
+    reranker_path: str | None = None,
 ) -> dict:
     """Retrieval for every item; generation + judge scoring only when
     `full_pipeline` (generation is the expensive step on CPU - the runner
     decides per-item which items get it, see execute_eval_run)."""
     start = time.monotonic()
     query_embedding = embedder.embed_query(item.question)
-    fused = await run_retrieval_pipeline(db, item.question, query_embedding)
+    fused = await run_retrieval_pipeline(
+        db, item.question, query_embedding, reranker_path=reranker_path
+    )
     top_chunks = fused[: settings.FINAL_TOP_K]
 
     document_ids = list({c.chunk.document_id for c in top_chunks})
@@ -202,11 +205,16 @@ async def execute_eval_run(
     embedder: EmbeddingProvider,
     llm: LLMProvider,
     full_pipeline_ids: set[str] | None = None,
+    reranker_path: str | None = None,
 ) -> None:
     """`full_pipeline_ids=None` runs generation+judge on every item;
     otherwise only on that subset (retrieval-only metrics still run for
     all items) - see DECISIONS.md 2026-08-01 on why a full 120-item
-    generation+judge pass isn't run by default on this hardware."""
+    generation+judge pass isn't run by default on this hardware.
+
+    `reranker_path` scores a specific (usually candidate) reranker instead
+    of the registry's active one - required for the Phase 6 A/B promotion
+    gate, which must evaluate a model *before* deciding to ship it."""
     run = await db.get(EvalRun, run_id)
     assert run is not None
     judge = JudgeProvider(llm)
@@ -226,7 +234,7 @@ async def execute_eval_run(
     for item in items:
         try:
             full = full_pipeline_ids is None or item.id in full_pipeline_ids
-            outcome = await run_item(db, item, embedder, llm, judge, minicheck, full)
+            outcome = await run_item(db, item, embedder, llm, judge, minicheck, full, reranker_path)
             eval_result = EvalResult(
                 run_id=run_id,
                 question_id=item.id,

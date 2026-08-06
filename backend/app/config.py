@@ -127,6 +127,13 @@ class Settings(BaseSettings):
         "openrouter": 0.0,
     }
 
+    # --- Learning flywheel (SPEC.md §3.5) ---
+    FINETUNE_TORCH_THREADS: int = 6
+    """CPU threads for fine-tuning. Measured on this hardware (2026-08-06):
+    batch 32 is the throughput sweet spot at ~30 pairs/s and ~1.5GB peak RSS;
+    batch 64 doubles memory and gets *slower*, past the efficient working set."""
+    FINETUNE_BATCH_SIZE: int = 32
+
     # --- Budget guard (DECISIONS.md: caps the free-tier hybrid key) ---
     MAX_DAILY_LLM_CALLS: int = 500
     MAX_DAILY_LLM_TOKENS: int = 2_000_000

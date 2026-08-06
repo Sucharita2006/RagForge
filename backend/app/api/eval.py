@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.models.evals import EvalResult, EvalRun
+from app.models.learning import ModelRegistry
 from app.schemas.eval import EvalRunDetail, EvalRunOut, EvalRunRequest
 from app.workers.tasks import run_eval_task
 
@@ -33,6 +34,13 @@ async def start_eval_run(req: EvalRunRequest, db: AsyncSession = Depends(get_db)
     if full_pipeline_ids is None and not req.full_pipeline:
         full_pipeline_ids = []  # empty set: retrieval metrics only, no generation
 
+    reranker_path: str | None = None
+    if req.reranker_model_id is not None:
+        model = await db.get(ModelRegistry, req.reranker_model_id)
+        if model is None:
+            raise HTTPException(status_code=404, detail="reranker model not found")
+        reranker_path = model.artifact_path or model.base_model
+
     run = EvalRun(
         name=req.name,
         dataset_version=req.dataset_version,
@@ -40,6 +48,10 @@ async def start_eval_run(req: EvalRunRequest, db: AsyncSession = Depends(get_db)
             "full_pipeline": req.full_pipeline,
             "full_pipeline_ids": full_pipeline_ids,
             "llm_provider": req.llm_provider,
+            # Recorded so an A/B comparison can always say which model
+            # produced which side, rather than inferring it from run order.
+            "reranker_model_id": str(req.reranker_model_id) if req.reranker_model_id else None,
+            "reranker_path": reranker_path,
         },
         status="running",
     )
@@ -47,7 +59,9 @@ async def start_eval_run(req: EvalRunRequest, db: AsyncSession = Depends(get_db)
     await db.commit()
     await db.refresh(run)
 
-    run_eval_task.delay(str(run.id), str(dataset_path), full_pipeline_ids, req.llm_provider)
+    run_eval_task.delay(
+        str(run.id), str(dataset_path), full_pipeline_ids, req.llm_provider, reranker_path
+    )
     return run
 
 

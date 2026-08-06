@@ -2,6 +2,7 @@ import asyncio
 import logging
 import uuid
 from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 from pathlib import Path
 
 from opentelemetry import trace
@@ -10,6 +11,13 @@ from app.config import get_settings
 from app.db.session import async_session_maker, engine
 from app.evals.runner import execute_eval_run
 from app.ingestion.pipeline import ingest_document, reingest_document
+from app.learning.clustering import cluster_recent_failures
+from app.learning.finetune import (
+    ARTIFACT_ROOT,
+    load_training_examples,
+    register_candidate,
+    train_reranker,
+)
 from app.observability.monitor import (
     check_faithfulness_drop,
     sample_recent_answers,
@@ -20,6 +28,7 @@ from app.providers.llm.base import LLMProvider
 from app.providers.llm.gemini import GeminiProvider
 from app.providers.llm.ollama import OllamaProvider
 from app.providers.llm.openrouter import OpenRouterProvider
+from app.retrieval.rerankers.registry import active_reranker_path
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -75,7 +84,11 @@ def reingest_document_task(self, document_id: str, file_path: str) -> None:
 
 
 async def _run_eval_and_dispose(
-    run_id: str, dataset_path: str, full_pipeline_ids: list[str] | None, llm_provider: str
+    run_id: str,
+    dataset_path: str,
+    full_pipeline_ids: list[str] | None,
+    llm_provider: str,
+    reranker_path: str | None,
 ) -> None:
     try:
         async with async_session_maker() as db:
@@ -88,6 +101,7 @@ async def _run_eval_and_dispose(
                 embedder,
                 llm,
                 set(full_pipeline_ids) if full_pipeline_ids is not None else None,
+                reranker_path,
             )
     finally:
         await engine.dispose()
@@ -100,8 +114,11 @@ def run_eval_task(
     dataset_path: str,
     full_pipeline_ids: list[str] | None = None,
     llm_provider: str = "ollama",
+    reranker_path: str | None = None,
 ) -> None:
-    asyncio.run(_run_eval_and_dispose(run_id, dataset_path, full_pipeline_ids, llm_provider))
+    asyncio.run(
+        _run_eval_and_dispose(run_id, dataset_path, full_pipeline_ids, llm_provider, reranker_path)
+    )
 
 
 async def _run_online_monitor(llm_provider: str) -> None:
@@ -151,3 +168,65 @@ async def _run_online_monitor(llm_provider: str) -> None:
 @celery_app.task(name="run_online_monitor", bind=True, max_retries=0)
 def run_online_monitor_task(self, llm_provider: str = "ollama") -> None:
     asyncio.run(_run_online_monitor(llm_provider))
+
+
+async def _finetune_reranker(max_pairs: int | None, epochs: int, batch_size: int) -> None:
+    """Train a candidate reranker from mined pairs and register it (SPEC.md
+    §3.5). Registered as `candidate` only - promotion requires winning a
+    measured A/B, which this task deliberately does not do for itself."""
+    settings = get_settings()
+    try:
+        async with async_session_maker() as db:
+            examples = await load_training_examples(db, max_pairs)
+            if not examples:
+                logger.warning("reranker fine-tune: no training pairs available, nothing to do")
+                return
+
+            active_base = await active_reranker_path(db)
+            output_dir = ARTIFACT_ROOT / f"reranker-{datetime.now(UTC):%Y%m%d-%H%M%S}"
+
+        # Training is CPU-bound and synchronous; run it outside the session so
+        # a multi-minute fit doesn't hold a DB connection open the whole time.
+        train_config = await asyncio.to_thread(
+            train_reranker,
+            examples,
+            settings.RERANKER_MODEL,
+            output_dir,
+            epochs,
+            batch_size,
+        )
+        train_config["trained_against_active"] = active_base
+
+        async with async_session_maker() as db:
+            candidate = await register_candidate(
+                db, "reranker", settings.RERANKER_MODEL, str(output_dir), train_config
+            )
+        logger.info(
+            "reranker fine-tune complete: candidate %s from %d examples in %.1fs",
+            candidate.id,
+            train_config["n_examples"],
+            train_config["train_seconds"],
+        )
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="finetune_reranker", bind=True, max_retries=0)
+def finetune_reranker_task(
+    self, max_pairs: int | None = None, epochs: int = 1, batch_size: int = 32
+) -> None:
+    asyncio.run(_finetune_reranker(max_pairs, epochs, batch_size))
+
+
+async def _cluster_failures(window_hours: int) -> None:
+    try:
+        async with async_session_maker() as db:
+            clusters = await cluster_recent_failures(db, window_hours)
+        logger.info("failure clustering: wrote %d clusters", len(clusters))
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="cluster_failures", bind=True, max_retries=0)
+def cluster_failures_task(self, window_hours: int = 168) -> None:
+    asyncio.run(_cluster_failures(window_hours))

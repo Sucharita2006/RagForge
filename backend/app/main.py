@@ -7,6 +7,7 @@ from app.api.eval import router as eval_router
 from app.api.experiments import router as experiments_router
 from app.api.health import router as health_router
 from app.api.ingest import router as ingest_router
+from app.api.learning import router as learning_router
 from app.api.query import router as query_router
 from app.api.retrieve import router as retrieve_router
 from app.api.settings import router as settings_router
@@ -36,6 +37,7 @@ def create_app() -> FastAPI:
     app.include_router(traces_router, prefix="/api")
     app.include_router(analytics_router, prefix="/api")
     app.include_router(experiments_router, prefix="/api")
+    app.include_router(learning_router, prefix="/api")
 
     return app
 

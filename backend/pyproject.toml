@@ -43,6 +43,11 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# Runtime artifacts, not source: uploaded documents and fine-tuned model
+# directories (whose auto-generated model cards contain code blocks ruff
+# would otherwise try to reformat). Already gitignored; excluded here so a
+# training run can't make `ruff format --check` fail.
+extend-exclude = ["data/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
