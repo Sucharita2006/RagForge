@@ -10,7 +10,9 @@ class MiniLMReranker(RerankerProvider):
     def __init__(self, model_name: str | None = None) -> None:
         settings = get_settings()
         self._model_name = model_name or settings.RERANKER_MODEL
-        self._model = CrossEncoder(self._model_name, device="cpu")
+        self._model = CrossEncoder(
+            self._model_name, device="cpu", max_length=settings.RERANKER_MAX_LENGTH
+        )
 
     def rerank(self, query: str, documents: list[str]) -> list[float]:
         pairs = [(query, doc) for doc in documents]

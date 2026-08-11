@@ -50,6 +50,21 @@ class Settings(BaseSettings):
     EMBEDDING_DIM: int = 384
     RERANKER_PROVIDER: str = "minilm"  # minilm | bge_v2_m3 | cohere
     RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    RERANKER_MAX_LENGTH: int = 512
+    """Token cap per (query, passage) pair at rerank time.
+
+    Deploy-time latency lever, measured not assumed. A/B on the 51-item
+    held-out split (2026-08-06): 256 cuts per-query retrieval 8206ms ->
+    3184ms, a **significant** 2.6x win (CI [-5376, -4680]), while NDCG@10
+    fell 0.0216 and MRR 0.0293 with CIs straddling zero - i.e. no
+    *detectable* quality loss, but not demonstrated equivalence either
+    (the NDCG CI reaches -0.068, past SPEC.md §7.2's -0.03 tolerance).
+
+    Left at 512 (no truncation of a 512-token chunk) because on this CPU
+    profile the 5s saved is ~2% of a ~250s query dominated by generation
+    and claim verification - it buys nothing against the 3.0s p95 target
+    while carrying an unquantified quality risk. Worth revisiting in Phase 8
+    where hosted generation makes retrieval the dominant term."""
     # the `minicheck` package's own short alias (NOT a HF repo id) - it
     # internally resolves this to lytang/MiniCheck-RoBERTa-Large.
     MINICHECK_MODEL: str = "roberta-large"
@@ -96,6 +111,10 @@ class Settings(BaseSettings):
     CONFIDENCE_WEIGHT_CLAIM_SUPPORT: float = 0.5
     CONFIDENCE_WEIGHT_RETRIEVAL: float = 0.3
     CONFIDENCE_WEIGHT_SUFFICIENCY: float = 0.2
+    CONFIDENCE_RETRIEVAL_TOP_K: int = 2
+    """How many top rerank scores feed `retrieval_strength`. Averaging over the
+    full candidate list penalised the reranker for correctly rejecting the tail
+    (DECISIONS.md 2026-08-06); 2 requires corroboration without that penalty."""
     ABSTAIN_THRESHOLD: float = 0.55
 
     # --- Observability (SPEC.md §3.8) ---

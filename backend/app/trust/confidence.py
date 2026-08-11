@@ -34,7 +34,23 @@ def compute_confidence(
 
     claim_support = sum(c.support_prob or 0.0 for c in verified_claims) / len(verified_claims)
 
-    rerank_scores = [c.rerank_score for c in used_candidates if c.rerank_score is not None]
+    # Only the strongest few candidates count toward retrieval strength.
+    #
+    # Averaging sigmoid() over the *whole* candidate list (the original Phase 4
+    # formula) punished the reranker for doing its job: a cross-encoder that
+    # correctly ranks one chunk at +4.6 and rejects the rest at -3 to -7 scored
+    # 0.14, while a mushy ranker with everything at ~+1 scored 0.7. Sharper
+    # discrimination produced *lower* confidence, which is backwards.
+    # Measured on 25 judged items (2026-08-06): this component sat 0.23 below
+    # actual accuracy under the old rule and 0.04 below it under this one,
+    # cutting overall ECE from 0.222 to 0.176.
+    #
+    # top-2 rather than top-1 so a single lucky chunk can't carry the score;
+    # at n=25 top-1 vs top-2 is not statistically distinguishable, so the
+    # choice is made on that reasoning, not on the decimal.
+    rerank_scores = sorted(
+        (c.rerank_score for c in used_candidates if c.rerank_score is not None), reverse=True
+    )[: settings.CONFIDENCE_RETRIEVAL_TOP_K]
     retrieval_strength = (
         sum(_sigmoid(s) for s in rerank_scores) / len(rerank_scores) if rerank_scores else 0.0
     )

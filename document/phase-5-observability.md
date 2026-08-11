@@ -75,6 +75,8 @@ The RERANKER span's 19 attributes are model name, input-document count, top_k, a
 
 `GET /api/analytics/summary` over the same window returns the per-stage breakdown that makes the dashboard actionable — LLM (157.7s) and EVALUATOR (85.8s) together account for ~92% of end-to-end latency, with retrieval+rerank at 21.2s and embedding negligible at 89ms. Cost reads `$0.0` because generation is self-hosted, which the price table encodes explicitly rather than leaving unpriced.
 
+> **Correction (2026-08-06).** The "p50/p95/p99 = 264,880 ms" reported by the analytics endpoint above came from a window containing **exactly one query**, which was also that process's *first* — so it included cold model loading. Quoting it as a p95 was wrong: a percentile over n=1 is just that one sample, and a cold sample at that. Direct measurement afterwards (`5` warm queries) gives **retrieve() p50 = 8.2s warm vs 25.8s cold**, and within it dense+sparse search is only **22.8 ms** — the cross-encoder is essentially all of retrieval's cost. Also note the RETRIEVER span *contains* the nested RERANKER span, so the two numbers in this table must not be added. The stage ranking (generation ≫ verification ≫ retrieval) still holds; the absolute p95 figure does not. See `DECISIONS.md` 2026-08-06.
+
 Engineering verification: `ruff check` / `ruff format --check` / `mypy app` clean (92 source files); `pytest tests/unit` 90 passed (21 new this phase); frontend `eslint` / `tsc --noEmit` / `next build` clean across 8 routes.
 
 ## Key decisions this phase
