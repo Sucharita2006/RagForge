@@ -85,6 +85,9 @@ jobs:
       - name: Run migrations
         run: alembic upgrade head
 
+      - name: Integration tests (need the migrated database)
+        run: pytest tests/integration -v
+
       - name: Generate CI fixture corpus
         run: python scripts/generate_ci_fixtures.py
 

@@ -6,7 +6,7 @@ Built as a phase-by-phase engineering project. Every phase closes with a measure
 
 ## What it does today
 
-- **Hybrid retrieval**: dense (pgvector HNSW) + sparse (Postgres full-text) fused with Reciprocal Rank Fusion, then cross-encoder reranking (MiniLM), over parent-child hierarchical chunks.
+- **Hybrid retrieval**: dense (pgvector HNSW) + sparse (BM25 over Postgres full-text lexemes) fused with Reciprocal Rank Fusion, then cross-encoder reranking (MiniLM), over parent-child hierarchical chunks.
 - **Grounded generation**: local LLM (Qwen3-4B via Ollama) answers with per-sentence citations back to source chunks, with fabricated citation IDs filtered out.
 - **Eval harness**: a curated 117-item golden set (single-hop / multi-hop / unanswerable / adversarial), retrieval + generation + LLM-as-judge metrics with bootstrap 95% confidence intervals, a persisted eval-run history, and an Evaluations UI.
 - **CI regression gate**: `.github/workflows/evals.yml` ingests a fixture corpus and queries it end-to-end on every PR — a real retrieval regression fails the build automatically.
