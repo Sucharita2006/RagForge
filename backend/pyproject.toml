@@ -8,7 +8,9 @@ dependencies = [
     "uvicorn[standard]>=0.32",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
-    "sqlalchemy>=2.0",
+    # [asyncio] pulls greenlet, which SQLAlchemy 2.1 stopped installing by
+    # default - without it every `sqlalchemy.ext.asyncio` import fails.
+    "sqlalchemy[asyncio]>=2.0",
     "alembic>=1.14",
     "asyncpg>=0.30",
     "psycopg[binary]>=3.2",

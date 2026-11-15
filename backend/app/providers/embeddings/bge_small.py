@@ -32,7 +32,10 @@ class BgeSmallEmbeddingProvider(EmbeddingProvider):
 
     @property
     def dim(self) -> int:
-        return self._model.get_sentence_embedding_dimension()
+        dim = self._model.get_sentence_embedding_dimension()
+        if dim is None:  # typed Optional since sentence-transformers 6
+            raise ValueError(f"{self._model_name} does not report an embedding dimension")
+        return dim
 
     def count_tokens(self, text: str) -> int:
         return len(self._model.tokenizer.encode(text, add_special_tokens=False))
