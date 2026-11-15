@@ -8,8 +8,10 @@ services:
       POSTGRES_USER: ragforge
       POSTGRES_PASSWORD: ragforge
       POSTGRES_DB: ragforge
+    # Host ports are overridable (POSTGRES_PORT / REDIS_PORT in .env) for
+    # machines where another stack already holds the defaults.
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     # implementation-plan.md §2.E7 / §3.1: parallel HNSW index builds use /dev/shm;
@@ -25,7 +27,7 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redisdata:/data
     healthcheck:
