@@ -1,0 +1,28 @@
+# Optional NVIDIA GPU profile. The embedder, the reranker and the claim
+# checker run on the GPU; generation stays wherever Ollama runs.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+#
+# Needs an NVIDIA driver new enough for CUDA 13 (>= 580) and Docker with GPU
+# support (Docker Desktop on WSL2 has it). The CPU image is untouched: this
+# builds a separate ragforge-api-gpu image.
+
+x-gpu: &gpu
+  image: ragforge-api-gpu
+  build:
+    context: ./backend
+    args:
+      TORCH_INDEX: https://download.pytorch.org/whl/cu130
+  environment:
+    TORCH_DEVICE: cuda
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+
+services:
+  api: *gpu
+  worker: *gpu

@@ -14,7 +14,7 @@ class BgeSmallEmbeddingProvider(EmbeddingProvider):
     def __init__(self, model_name: str | None = None) -> None:
         settings = get_settings()
         self._model_name = model_name or settings.EMBEDDING_MODEL
-        self._model = SentenceTransformer(self._model_name, device="cpu")
+        self._model = SentenceTransformer(self._model_name, device=settings.TORCH_DEVICE)
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         embeddings = self._model.encode(texts, normalize_embeddings=True, show_progress_bar=False)

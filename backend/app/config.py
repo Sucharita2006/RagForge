@@ -65,6 +65,10 @@ class Settings(BaseSettings):
     and claim verification - it buys nothing against the 3.0s p95 target
     while carrying an unquantified quality risk. Worth revisiting in Phase 8
     where hosted generation makes retrieval the dominant term."""
+    TORCH_DEVICE: str = "cpu"
+    """Where the embedder and reranker run: "cpu" (the 8GB-RAM profile this was
+    built on) or "cuda" (docker-compose.gpu.yml sets it). MiniCheck places
+    itself on a GPU when torch can see one."""
     # the `minicheck` package's own short alias (NOT a HF repo id) - it
     # internally resolves this to lytang/MiniCheck-RoBERTa-Large.
     MINICHECK_MODEL: str = "roberta-large"

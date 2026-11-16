@@ -63,6 +63,7 @@ docker compose up -d
 - API: `http://localhost:8000` (`/api/health`, `/api/ready`, OpenAPI docs at `/docs`)
 - Frontend: `http://localhost:3000`
 - Seed a demo corpus: `python scripts/seed_demo_corpus.py` (pulls real arXiv LLM/RAG papers)
+- With an NVIDIA GPU: `docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d` runs the embedder, reranker and claim checker on it (CUDA 13 driver, about 3GB more to download). Answers are the same; only speed changes.
 
 ## Project structure
 

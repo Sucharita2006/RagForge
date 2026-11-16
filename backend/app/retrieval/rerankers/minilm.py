@@ -11,7 +11,9 @@ class MiniLMReranker(RerankerProvider):
         settings = get_settings()
         self._model_name = model_name or settings.RERANKER_MODEL
         self._model = CrossEncoder(
-            self._model_name, device="cpu", max_length=settings.RERANKER_MAX_LENGTH
+            self._model_name,
+            device=settings.TORCH_DEVICE,
+            max_length=settings.RERANKER_MAX_LENGTH,
         )
 
     def rerank(self, query: str, documents: list[str]) -> list[float]:
