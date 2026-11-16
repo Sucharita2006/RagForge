@@ -345,7 +345,12 @@ Dense retrieval alone reproduces the embedding model's published scores (bge-sma
 
 On the 70% held-out split: ArguAna 0.600, SciDocs 0.193. Both beat every system in the BEIR paper (best: ArguAna 0.493, SciDocs 0.166) and match the embedding model's published scores (0.596, 0.205). They do not exceed them, and no claim of doing so is made. The golden set shows no significant change; its point estimate is slightly lower, and one question's paper fell out of the top 8.
 
-**Not yet redone:** the trust layer's abstain threshold was calibrated in August with full reranking. Confidence reads the top two rerank scores among the passages used, so it should move little, but a recalibration run (which needs generation) is owed.
+**Abstain threshold recalibrated after the change.** The trust layer's threshold had been calibrated in August with full reranking, and confidence reads the top two rerank scores among the passages used. `scripts/calibrate_abstain_threshold.py` was rerun on the 40-item calibration set with the new defaults, generating with qwen3:4b-instruct. It chose **0.010**, the August value:
+- all 23 unanswerable items scored exactly 0, from the model's own insufficient-context flag;
+- the 9 items that scored above 0 are all answerable, so answered-precision is 1.00 with 23/23 correct abstentions;
+- coverage is 9 of 40. One answerable single-hop question (si_042) and 7 of the 10 adversarial items also scored 0 and are withheld. That is the trust layer's coverage cost, not a precision failure.
+
+As in August (2026-08-03), the continuous part of the confidence score decides nothing on this set. The live value is stored in `app_settings`, and the run with its curve in `calibration_runs`.
 
 ## 2026-11-16 — The claim checker is strict, measured on SciFact
 
