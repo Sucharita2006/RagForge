@@ -24,6 +24,13 @@ class SourceOut(BaseModel):
     rerank_score: float | None
 
 
+class PassageOut(BaseModel):
+    chunk_id: str
+    document_external_id: str | None
+    title: str | None
+    text: str
+
+
 class QueryResponse(BaseModel):
     query_id: uuid.UUID
     answer_id: uuid.UUID
@@ -37,6 +44,10 @@ class QueryResponse(BaseModel):
     confidence: float
     abstained: bool
     sources: list[SourceOut]
+    passages: list[PassageOut] = []
+    """The text of every chunk a returned claim cites, in first-cited order,
+    so a reader can see what each sentence was checked against. Empty when
+    `abstained`, like `claims`."""
     trace_id: str | None
     model: str
     latency_ms: int | None

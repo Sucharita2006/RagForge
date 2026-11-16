@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.generation.generator import generate_answer
 from app.generation.prompts import PROMPT_VERSION
 from app.models.answers import Answer
+from app.models.chunks import Chunk
 from app.models.documents import Document
 from app.models.queries import Query
 from app.observability.cost import compute_cost_usd
@@ -20,7 +21,7 @@ from app.retrieval.cache import SemanticCache, get_corpus_version
 from app.retrieval.fusion import FusedCandidate
 from app.retrieval.pipeline import retrieve as run_retrieval_pipeline
 from app.retrieval.query_transform import fetch_recent_history, rewrite_query
-from app.schemas.query import ClaimOut, QueryRequest, QueryResponse, SourceOut
+from app.schemas.query import ClaimOut, PassageOut, QueryRequest, QueryResponse, SourceOut
 from app.trust.abstain import get_abstain_threshold, should_abstain
 from app.trust.claims import verify_claims
 from app.trust.confidence import compute_confidence
@@ -56,6 +57,36 @@ async def _sources_for(db: AsyncSession, candidates: list[FusedCandidate]) -> li
             )
         )
     return sources
+
+
+async def _passages_for(
+    db: AsyncSession, claims: list[ClaimOut], used_chunks: list[Chunk]
+) -> list[PassageOut]:
+    """The chunks the returned claims cite, in first-cited order."""
+    chunks_by_id = {str(chunk.id): chunk for chunk in used_chunks}
+    cited = [
+        chunks_by_id[chunk_id]
+        for chunk_id in dict.fromkeys(c for claim in claims for c in claim.citations)
+        if chunk_id in chunks_by_id
+    ]
+    if not cited:
+        return []
+    result = await db.execute(
+        select(Document).where(Document.id.in_({chunk.document_id for chunk in cited}))
+    )
+    docs_by_id = {d.id: d for d in result.scalars().all()}
+    passages = []
+    for chunk in cited:
+        doc = docs_by_id.get(chunk.document_id)
+        passages.append(
+            PassageOut(
+                chunk_id=str(chunk.id),
+                document_external_id=doc.external_id if doc else None,
+                title=doc.title if doc else None,
+                text=chunk.content,
+            )
+        )
+    return passages
 
 
 @router.post("/query", response_model=QueryResponse)
@@ -108,6 +139,8 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
                 confidence=cached["confidence"],
                 abstained=cached["abstained"],
                 sources=[SourceOut(**s) for s in cached["sources"]],
+                # entries cached before passages existed simply have none
+                passages=[PassageOut(**p) for p in cached.get("passages", [])],
                 trace_id=trace_id,
                 model=cached["model"],
                 latency_ms=cached["latency_ms"],
@@ -192,6 +225,7 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
         # the full verified claims still land in the DB row above for
         # observability/eval, just not in what the user sees.
         response_claims = [] if abstained else [ClaimOut(**c.model_dump()) for c in verified_claims]
+        passages = await _passages_for(db, response_claims, used_chunks)
 
         await cache.set(
             query_embedding,
@@ -202,6 +236,7 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
                 "confidence": confidence,
                 "abstained": abstained,
                 "sources": [s.model_dump() for s in sources],
+                "passages": [p.model_dump() for p in passages],
                 "model": answer_row.model,
                 "latency_ms": answer_row.latency_ms,
             },
@@ -216,6 +251,7 @@ async def query(req: QueryRequest, db: AsyncSession = Depends(get_db)) -> QueryR
             confidence=confidence,
             abstained=abstained,
             sources=sources,
+            passages=passages,
             trace_id=trace_id,
             model=answer_row.model,
             latency_ms=answer_row.latency_ms,
