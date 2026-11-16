@@ -292,4 +292,75 @@ Both found by spot-checking generated items rather than assuming a "looks like i
 
 **Check left behind:** `tests/integration/test_sparse_bm25.py` runs the real SQL against Postgres (now a step in `evals.yml`): a question containing a word no chunk has must still return matches, ordered by rarity and frequency. The old query returns nothing for it.
 
-**Reason this matters:** a component that is never measured alone can be dead for months behind a strong neighbour. Before/after retrieval numbers on public data are recorded with the public-benchmark entry.
+**Reason this matters:** a component that is never measured alone can be dead for months behind a strong neighbour.
+
+**Update, 2026-11-16:** measured end to end the next day, fusing BM25 into the final ranking made it *worse* on two public benchmarks and changed nothing on the golden set, so keyword search is now off by default. BM25 stays as the implementation for when it is switched on. See the 2026-11-16 entries.
+
+## 2026-11-16 — Public benchmarks through the project's own eval runner
+
+**Why:** the golden set was written and judged by the project's own 4B model and already scores hit_rate 0.988, so it cannot show a retrieval change. Two public BEIR collections with published numbers were added: **SciDocs** (25,657 papers, 1,000 test questions; relevant = papers the question's paper cites) and **ArguAna** (8,674 arguments, 1,406 test questions; relevant = the counter-argument).
+
+**How:** `backend/scripts/beir.py` downloads each collection from the BEIR distribution and loads it into its own database (`ragforge_beir_<name>`, never the demo corpus), one embedded chunk per document. The test questions are written in the project's own golden-set format, and runs go through `app.evals.runner.execute_eval_run`, the same code as `POST /api/eval/run`, so runs appear on the Golden set and A/B pages. The runner gained what public benchmarks need:
+- graded NDCG@10 over all relevant documents, as trec_eval computes it (the project's own `ndcg@10` credits only the first hit), and recall@10;
+- the same score after each stage (dense, fused, final), plus each question's whole candidate pool with its dense rank, BM25 rank, RRF and rerank scores. `beir.py analyze` replays pools under other ordering policies offline, in seconds;
+- ArguAna's questions are themselves documents of the collection; like BEIR's own scoring, a question's own document is skipped.
+
+Policies are chosen on a fixed 30% of each collection's questions (hash of the id), and the other 70% is reported alongside. The same commands run on the project's golden set over its main database (`beir.py run golden`), so every change is also checked on the real use case. The runs used the GPU profile; scores do not depend on the device, timings do.
+
+## 2026-11-16 — The reranker abstains below a confidence threshold; keyword search off by default
+
+**What the stage scores showed** (NDCG@10, dev / test split, keyword search on, full candidate union reranked):
+
+| | SciDocs | ArguAna |
+|---|---|---|
+| dense alone | 0.221 / 0.198 | 0.598 / 0.606 |
+| dense + BM25, RRF | 0.209 / 0.182 | 0.551 / 0.555 |
+| reranked (production) | 0.183 / 0.163 | 0.426 / 0.414 |
+
+Dense retrieval alone reproduces the embedding model's published scores (bge-small-en-v1.5: SciDocs 0.205, ArguAna 0.596). Every later stage lost ground. The MS MARCO MiniLM cross-encoder alone cost 0.17 on ArguAna; the BEIR paper reports the same model failing on ArguAna, a task "extremely different to the MS MARCO training dataset".
+
+**Decision:** keep the reranker but let it abstain. Candidates it scores at or above `RERANK_LIFT_THRESHOLD` move up in its order; it leaves every other candidate in retrieval order (`app.retrieval.pipeline.apply_rerank`). This is the trust layer's rule, withhold what you are not sure of, applied to ranking. A threshold sweep over SciDocs dev, ArguAna dev and the whole golden set (gain over dense alone):
+
+| Threshold | SciDocs dev | ArguAna dev | Golden (84) | Sum |
+|---|---|---|---|---|
+| none (full reranking) | -0.038 | -0.172 | +0.014 | -0.196 |
+| 3.5 | -0.007 | -0.005 | +0.019 | +0.007 |
+| **4.0** | -0.004 | -0.003 | **+0.020** | **+0.013** |
+| 4.5 | -0.004 | -0.002 | +0.017 | +0.011 |
+| 6.0 (rarely lifts) | -0.001 | +0.001 | 0.000 | -0.001 |
+
+4.0 keeps the reranker's gain on the project's own questions and gives back almost nothing on the out-of-domain sets. The golden set's 84 questions were used in choosing, so it serves as a guard here, not an unbiased test.
+
+**Keyword search off by default (`SPARSE_TOP_K=0`):** with the full reranker, fusing BM25 lowered NDCG@10 on SciDocs (-0.010, interval [-0.014, -0.007]) and on ArguAna (-0.004 [-0.007, -0.001]), and the fused stage is below dense alone on both. On the golden set it changed nothing, and its SQL adds 0.3-0.9 s per question. The old all-terms query had contributed nothing either: on the golden set, removing it gave identical results on every question, and on SciDocs it returned no rows for 890 of 1,000 questions. "Hybrid" retrieval had been dense-only in practice. BM25 remains the implementation when `SPARSE_TOP_K > 0`.
+
+**Tried and dropped:** pseudo-relevance feedback (move the query embedding toward its top-k results and search again, `DENSE_FEEDBACK_DOCS`). The best setting on the combined dev split (3 results, weight 0.25) gained 0.004 on SciDocs test and lost 0.004 on ArguAna test, so it is left available and off. Reranking the whole candidate union instead of the fused top 50 did not rescue BM25 either.
+
+**Result, final configuration through the production pipeline, full test splits:**
+
+| | Before | After | Difference [95% interval] |
+|---|---|---|---|
+| ArguAna NDCG@10 | 0.432 | 0.599 | +0.167 [+0.148, +0.185] |
+| SciDocs NDCG@10 | 0.182 | 0.201 | +0.019 [+0.011, +0.026] |
+| Golden set NDCG@10 (first hit) | 0.948 | 0.938 | -0.011 [-0.036, +0.012] |
+
+On the 70% held-out split: ArguAna 0.600, SciDocs 0.193. Both beat every system in the BEIR paper (best: ArguAna 0.493, SciDocs 0.166) and match the embedding model's published scores (0.596, 0.205). They do not exceed them, and no claim of doing so is made. The golden set shows no significant change; its point estimate is slightly lower, and one question's paper fell out of the top 8.
+
+**Not yet redone:** the trust layer's abstain threshold was calibrated in August with full reranking. Confidence reads the top two rerank scores among the passages used, so it should move little, but a recalibration run (which needs generation) is owed.
+
+## 2026-11-16 — The claim checker is strict, measured on SciFact
+
+`backend/scripts/scifact_checker.py` scores every (claim, abstract) pair of SciFact's labelled dev split (Wadden et al., 2020; 323 pairs) with the production MiniCheck provider and threshold (0.5). A "supported" verdict is right only for pairs experts labelled SUPPORT.
+
+| | Judged supported |
+|---|---|
+| SUPPORT (138) | 55.8% [47.1, 64.5] |
+| CONTRADICT (71) | 4.2% [0.0, 9.9] |
+| NOT_ENOUGH_INFO (114) | 0.9% [0.0, 2.6] |
+
+Precision of a "supported" verdict 95.1% [90.1, 98.8], balanced accuracy 0.768 [0.724, 0.810], AUROC 0.904 [0.868, 0.936]. The checker almost never passes a claim it should not, but it rejects 44% of claims that are supported. This is the measured cause of the 0.398 unsupported-claim rate (2026-08-06) and of the trust layer's under-confidence (ECE). Because the scores rank well (AUROC 0.90), the threshold is the lever: choose it on SciFact's train split and confirm on dev, without changing the model. Per-pair results (ids and probabilities, no SciFact text) are in `eval-datasets/benchmarks/scifact-checker.json`.
+
+## 2026-11-16 — Ingestion and reproducibility fixes found while rebuilding the corpus
+
+- **The golden set's corpus could not be rebuilt.** `seed_demo_corpus.py` asks arXiv for today's best matches, and those drift, so a fresh clone got different papers from the ones the golden set's expected ids point at. `--from-golden-set` now fetches exactly the 37 paper versions it references. The rebuilt corpus reproduces the August baseline closely (hit_rate 0.976 against 0.988, NDCG@10 0.948 against 0.950).
+- **NUL characters failed whole documents.** Two of the 37 papers extract to text containing 0x00, which Postgres rejects in a text column, and the whole document failed at insert time. `parse_document` now strips it, at the one point every ingestion path goes through.
+- **Docling failed on every document under the GPU profile.** Docling runs in a child process so it can be killed on timeout. Forked from a worker that had already initialised CUDA for the embedder, the child could not use CUDA, so every document silently fell back to pypdf. The child is now spawned instead, and spawned processes need the project on their path: the image now sets `PYTHONPATH=/app`, which also retires the `-e PYTHONPATH=/app` workaround in older commands. Each spawned parse reloads Docling's models (about 5 minutes per paper here), so the corpus used for these measurements was left parsed by pypdf; both sides of every golden-set comparison used the same corpus.
