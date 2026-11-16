@@ -23,6 +23,11 @@ RUN pip install --no-cache-dir -e ".[dev]"
 # larger HF model checkpoints (implementation-plan.md §3).
 RUN python -c "import nltk; nltk.download('punkt_tab')"
 
+# The editable install above runs before the source is copied in, so `app`
+# is importable only from the working directory. Processes that start fresh
+# (spawned Docling parsers, scripts run from elsewhere) need it on the path.
+ENV PYTHONPATH=/app
+
 COPY . .
 
 EXPOSE 8000
