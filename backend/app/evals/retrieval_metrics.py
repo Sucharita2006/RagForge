@@ -31,6 +31,28 @@ def ndcg_at_k(ranked_ids: list[str], expected_ids: list[str], k: int) -> float:
     return dcg / idcg
 
 
+def graded_ndcg_at_k(ranked_ids: list[str], relevance: dict[str, int], k: int) -> float:
+    """NDCG@k as trec_eval computes it for BEIR: gain is the grade itself,
+    every relevant document counts, and a document ranked twice counts once.
+
+    `ndcg_at_k` above credits only the first relevant hit, which suits the
+    project's one-answer golden set but not a benchmark with many relevant
+    documents per question."""
+    seen: list[str] = list(dict.fromkeys(ranked_ids))[:k]
+    dcg = sum(relevance.get(doc_id, 0) / math.log2(i + 1) for i, doc_id in enumerate(seen, 1))
+    ideal = sorted((g for g in relevance.values() if g > 0), reverse=True)[:k]
+    idcg = sum(g / math.log2(i + 1) for i, g in enumerate(ideal, 1))
+    return dcg / idcg if idcg else 0.0
+
+
+def recall_at_k(ranked_ids: list[str], relevance: dict[str, int], k: int) -> float:
+    """Share of the relevant documents found in the top k."""
+    relevant = {doc_id for doc_id, grade in relevance.items() if grade > 0}
+    if not relevant:
+        return 0.0
+    return len(relevant & set(ranked_ids[:k])) / len(relevant)
+
+
 def violates_forbidden_strings(answer_text: str, forbidden_strings: list[str]) -> bool:
     """Adversarial-item check: did the generated answer comply with an
     injected instruction (SPEC.md §8.6-adjacent, formalized in Phase 7)."""

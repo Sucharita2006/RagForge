@@ -1,3 +1,4 @@
+import math
 import uuid
 
 from sqlalchemy import select, text
@@ -40,3 +41,24 @@ async def dense_search(
 
     result = await db.execute(stmt)
     return [(chunk, 1.0 - dist) for chunk, dist in result.all()]
+
+
+def feedback_query(
+    query_embedding: list[float], feedback: list[list[float]], weight: float
+) -> list[float]:
+    """Rocchio pseudo-relevance feedback in embedding space: move the query
+    toward the (unit-length) centroid of its own top results by `weight`,
+    then renormalise. No feedback or no weight leaves the query unchanged."""
+    if not feedback or weight <= 0:
+        return query_embedding
+    centroid = [sum(column) / len(feedback) for column in zip(*feedback, strict=True)]
+    centroid_norm = math.sqrt(sum(x * x for x in centroid)) or 1.0
+    mixed = [q + weight * c / centroid_norm for q, c in zip(query_embedding, centroid, strict=True)]
+    norm = math.sqrt(sum(x * x for x in mixed)) or 1.0
+    return [x / norm for x in mixed]
+
+
+def embedding_of(chunk: Chunk) -> list[float]:
+    vector = chunk.embedding
+    assert vector is not None, "parent chunks have no embedding and are never search results"
+    return vector.to_list() if hasattr(vector, "to_list") else list(vector)

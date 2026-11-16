@@ -60,3 +60,7 @@ backend/alembic/versions/__pycache__/
 # --- Design tooling state (review captures, local design sidecar) ---
 .impeccable/
 .playwright-mcp/
+
+# --- Public benchmark downloads and the golden sets generated from them ---
+eval-datasets/downloads/
+eval-datasets/beir-*/

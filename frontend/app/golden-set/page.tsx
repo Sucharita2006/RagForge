@@ -42,6 +42,12 @@ const METRICS: [key: string, label: string][] = [
   ["hit_rate", "Hit rate"],
   ["reciprocal_rank", "Reciprocal rank"],
   ["ndcg@10", "NDCG@10"],
+  // public benchmark runs (BEIR): graded, every relevant document counts,
+  // scored after each stage of the pipeline
+  ["ndcg@10_graded", "NDCG@10, BEIR"],
+  ["ndcg@10_graded.dense", "NDCG@10, dense stage"],
+  ["ndcg@10_graded.fused", "NDCG@10, fused stage"],
+  ["recall@10", "Recall@10"],
   ["faithfulness", "Faithfulness"],
   ["answer_correctness", "Answer correctness"],
   ["context_precision", "Context precision"],

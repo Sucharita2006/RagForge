@@ -13,8 +13,10 @@ from app.evals.bootstrap import bootstrap_ci
 from app.evals.judge import JudgeProvider
 from app.evals.retrieval_metrics import (
     abstention_correct,
+    graded_ndcg_at_k,
     hit_rate,
     ndcg_at_k,
+    recall_at_k,
     reciprocal_rank,
     violates_forbidden_strings,
 )
@@ -63,7 +65,7 @@ async def run_item(
     embedder: EmbeddingProvider,
     llm: LLMProvider,
     judge: JudgeProvider,
-    minicheck: MiniCheckProvider,
+    minicheck: MiniCheckProvider | None,
     full_pipeline: bool,
     reranker_path: str | None = None,
 ) -> dict:
@@ -77,8 +79,7 @@ async def run_item(
     )
     top_chunks = fused[: settings.FINAL_TOP_K]
 
-    document_ids = list({c.chunk.document_id for c in top_chunks})
-    external_id_by_doc = await _external_ids_for(db, document_ids)
+    external_id_by_doc = await _external_ids_for(db, list({c.chunk.document_id for c in fused}))
     ranked_external_ids = [
         external_id_by_doc[str(c.chunk.document_id)]
         for c in top_chunks
@@ -91,7 +92,7 @@ async def run_item(
         metrics["reciprocal_rank"] = reciprocal_rank(ranked_external_ids, item.expected_arxiv_ids)
         metrics["ndcg@10"] = ndcg_at_k(ranked_external_ids, item.expected_arxiv_ids, 10)
 
-    retrieved_payload = {
+    retrieved_payload: dict = {
         "candidates": [
             {
                 "chunk_id": str(c.chunk.id),
@@ -101,6 +102,36 @@ async def run_item(
             for c in top_chunks
         ]
     }
+
+    # In ArguAna each question is itself a document of the collection; BEIR
+    # scoring skips a question's own document, so the pool skips it too.
+    pool = [
+        (external_id_by_doc[str(c.chunk.document_id)], c)
+        for c in fused
+        if external_id_by_doc.get(str(c.chunk.document_id), item.id) != item.id
+    ]
+    # The whole candidate pool, compact, so ordering policies can be evaluated
+    # offline (scripts/beir.py analyze) without re-running retrieval.
+    retrieved_payload["pool"] = [
+        [doc_id, c.dense_rank, c.sparse_rank, round(c.rrf_score, 6), c.rerank_score]
+        for doc_id, c in pool
+    ]
+    if item.relevance:
+        # Benchmark items are scored at depth 10 whatever FINAL_TOP_K is, and
+        # at each stage of the pipeline, so a run shows where quality is
+        # gained or lost.
+        stages = {
+            "": pool,  # the order the pipeline returned
+            ".dense": sorted(
+                (p for p in pool if p[1].dense_rank is not None),
+                key=lambda p: p[1].dense_rank or 0,
+            ),
+            ".fused": sorted(pool, key=lambda p: p[1].rrf_score, reverse=True),
+        }
+        for suffix, order in stages.items():
+            top = [doc_id for doc_id, _ in order[:10]]
+            metrics[f"ndcg@10_graded{suffix}"] = graded_ndcg_at_k(top, item.relevance, 10)
+        metrics["recall@10"] = recall_at_k([doc_id for doc_id, _ in pool[:10]], item.relevance, 10)
 
     answer_payload: dict = {}
     judge_notes: str | None = None
@@ -112,6 +143,7 @@ async def run_item(
         answer, raw = await generate_answer(llm, item.question, context, valid_chunk_ids)
         answer_text = " ".join(c.text for c in answer.answer_sentences)
 
+        assert minicheck is not None, "full-pipeline items need the claim checker"
         verified_claims = verify_claims(minicheck, answer.answer_sentences, used_chunks)
         confidence = compute_confidence(verified_claims, top_chunks, answer.insufficient_context)
         threshold = await get_abstain_threshold(db)
@@ -218,7 +250,10 @@ async def execute_eval_run(
     run = await db.get(EvalRun, run_id)
     assert run is not None
     judge = JudgeProvider(llm)
-    minicheck = get_minicheck_provider()
+    # The checker is a ~1.4GB model; a retrieval-only run (an empty id set)
+    # never generates, so it never needs it.
+    generates = full_pipeline_ids is None or bool(full_pipeline_ids)
+    minicheck = get_minicheck_provider() if generates else None
 
     items = load_golden_set(dataset_path)
     items_by_id = {item.id: item for item in items}

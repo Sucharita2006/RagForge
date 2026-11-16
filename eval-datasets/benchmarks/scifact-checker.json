@@ -1,0 +1,1996 @@
+{
+  "summary": {
+    "threshold": 0.5,
+    "pairs": 323,
+    "judged_supported_by_label": {
+      "SUPPORT": {
+        "mean": 0.5579710144927537,
+        "ci95": [
+          0.47101449275362317,
+          0.644927536231884
+        ],
+        "n": 138
+      },
+      "CONTRADICT": {
+        "mean": 0.04225352112676056,
+        "ci95": [
+          0.0,
+          0.09859154929577464
+        ],
+        "n": 71
+      },
+      "NOT_ENOUGH_INFO": {
+        "mean": 0.008771929824561403,
+        "ci95": [
+          0.0,
+          0.02631578947368421
+        ],
+        "n": 114
+      }
+    },
+    "precision_of_supported": {
+      "mean": 0.9506172839506173,
+      "ci95": [
+        0.9012345679012346,
+        0.9876543209876543
+      ],
+      "n": 81
+    },
+    "balanced_accuracy": {
+      "mean": 0.768174696435566,
+      "ci95": [
+        0.7239304812834224,
+        0.8102032520325203
+      ]
+    },
+    "auroc": {
+      "mean": 0.9040344692518606,
+      "ci95": [
+        0.8675644028103044,
+        0.9355828220858896
+      ]
+    },
+    "checker": "roberta-large",
+    "dataset": "SciFact dev, release/latest"
+  },
+  "pairs": [
+    {
+      "claim_id": 1,
+      "doc_id": 31715818,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.007339076604694128
+    },
+    {
+      "claim_id": 3,
+      "doc_id": 14717500,
+      "label": "SUPPORT",
+      "prob": 0.01289613451808691
+    },
+    {
+      "claim_id": 5,
+      "doc_id": 13734012,
+      "label": "SUPPORT",
+      "prob": 0.030251802876591682
+    },
+    {
+      "claim_id": 13,
+      "doc_id": 1606628,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.00433114031329751
+    },
+    {
+      "claim_id": 36,
+      "doc_id": 5152028,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.004336679354310036
+    },
+    {
+      "claim_id": 36,
+      "doc_id": 11705328,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.005395897198468447
+    },
+    {
+      "claim_id": 42,
+      "doc_id": 18174210,
+      "label": "CONTRADICT",
+      "prob": 0.47907555103302
+    },
+    {
+      "claim_id": 48,
+      "doc_id": 13734012,
+      "label": "CONTRADICT",
+      "prob": 0.0034700275864452124
+    },
+    {
+      "claim_id": 49,
+      "doc_id": 5953485,
+      "label": "SUPPORT",
+      "prob": 0.9764602780342102
+    },
+    {
+      "claim_id": 50,
+      "doc_id": 12580014,
+      "label": "SUPPORT",
+      "prob": 0.9619830846786499
+    },
+    {
+      "claim_id": 51,
+      "doc_id": 45638119,
+      "label": "CONTRADICT",
+      "prob": 0.052197933197021484
+    },
+    {
+      "claim_id": 53,
+      "doc_id": 45638119,
+      "label": "SUPPORT",
+      "prob": 0.9846733808517456
+    },
+    {
+      "claim_id": 54,
+      "doc_id": 49556906,
+      "label": "CONTRADICT",
+      "prob": 0.15336182713508606
+    },
+    {
+      "claim_id": 56,
+      "doc_id": 4709641,
+      "label": "SUPPORT",
+      "prob": 0.7676597237586975
+    },
+    {
+      "claim_id": 57,
+      "doc_id": 4709641,
+      "label": "CONTRADICT",
+      "prob": 0.07230253517627716
+    },
+    {
+      "claim_id": 70,
+      "doc_id": 5956380,
+      "label": "SUPPORT",
+      "prob": 0.2486266940832138
+    },
+    {
+      "claim_id": 70,
+      "doc_id": 4414547,
+      "label": "SUPPORT",
+      "prob": 0.18380427360534668
+    },
+    {
+      "claim_id": 72,
+      "doc_id": 6076903,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.043969035148620605
+    },
+    {
+      "claim_id": 75,
+      "doc_id": 4387784,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.019166937097907066
+    },
+    {
+      "claim_id": 94,
+      "doc_id": 1215116,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.053773969411849976
+    },
+    {
+      "claim_id": 99,
+      "doc_id": 18810195,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.016873257234692574
+    },
+    {
+      "claim_id": 100,
+      "doc_id": 4381486,
+      "label": "SUPPORT",
+      "prob": 0.8845880627632141
+    },
+    {
+      "claim_id": 113,
+      "doc_id": 6157837,
+      "label": "SUPPORT",
+      "prob": 0.9864757657051086
+    },
+    {
+      "claim_id": 115,
+      "doc_id": 33872649,
+      "label": "CONTRADICT",
+      "prob": 0.009706634096801281
+    },
+    {
+      "claim_id": 118,
+      "doc_id": 6372244,
+      "label": "SUPPORT",
+      "prob": 0.6699448227882385
+    },
+    {
+      "claim_id": 124,
+      "doc_id": 4883040,
+      "label": "SUPPORT",
+      "prob": 0.9883898496627808
+    },
+    {
+      "claim_id": 127,
+      "doc_id": 21598000,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0047572762705385685
+    },
+    {
+      "claim_id": 128,
+      "doc_id": 8290953,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.006643000524491072
+    },
+    {
+      "claim_id": 129,
+      "doc_id": 27768226,
+      "label": "CONTRADICT",
+      "prob": 0.17566929757595062
+    },
+    {
+      "claim_id": 130,
+      "doc_id": 27768226,
+      "label": "SUPPORT",
+      "prob": 0.9849479794502258
+    },
+    {
+      "claim_id": 132,
+      "doc_id": 7975937,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.006772573105990887
+    },
+    {
+      "claim_id": 133,
+      "doc_id": 16280642,
+      "label": "SUPPORT",
+      "prob": 0.07422294467687607
+    },
+    {
+      "claim_id": 137,
+      "doc_id": 26016929,
+      "label": "SUPPORT",
+      "prob": 0.9040526747703552
+    },
+    {
+      "claim_id": 141,
+      "doc_id": 14437255,
+      "label": "SUPPORT",
+      "prob": 0.9499194025993347
+    },
+    {
+      "claim_id": 142,
+      "doc_id": 10582939,
+      "label": "CONTRADICT",
+      "prob": 0.047824591398239136
+    },
+    {
+      "claim_id": 143,
+      "doc_id": 10582939,
+      "label": "SUPPORT",
+      "prob": 0.9675543308258057
+    },
+    {
+      "claim_id": 146,
+      "doc_id": 10582939,
+      "label": "SUPPORT",
+      "prob": 0.9761533737182617
+    },
+    {
+      "claim_id": 148,
+      "doc_id": 1084345,
+      "label": "SUPPORT",
+      "prob": 0.9277617335319519
+    },
+    {
+      "claim_id": 163,
+      "doc_id": 18872233,
+      "label": "SUPPORT",
+      "prob": 0.8668503761291504
+    },
+    {
+      "claim_id": 171,
+      "doc_id": 12670680,
+      "label": "CONTRADICT",
+      "prob": 0.14334337413311005
+    },
+    {
+      "claim_id": 179,
+      "doc_id": 16322674,
+      "label": "SUPPORT",
+      "prob": 0.988400936126709
+    },
+    {
+      "claim_id": 179,
+      "doc_id": 27123743,
+      "label": "SUPPORT",
+      "prob": 0.9855231046676636
+    },
+    {
+      "claim_id": 179,
+      "doc_id": 23557241,
+      "label": "SUPPORT",
+      "prob": 0.9345483779907227
+    },
+    {
+      "claim_id": 179,
+      "doc_id": 17450673,
+      "label": "SUPPORT",
+      "prob": 0.9546633958816528
+    },
+    {
+      "claim_id": 180,
+      "doc_id": 16966326,
+      "label": "CONTRADICT",
+      "prob": 0.101654052734375
+    },
+    {
+      "claim_id": 183,
+      "doc_id": 12827098,
+      "label": "CONTRADICT",
+      "prob": 0.13713982701301575
+    },
+    {
+      "claim_id": 185,
+      "doc_id": 18340282,
+      "label": "CONTRADICT",
+      "prob": 0.03551997244358063
+    },
+    {
+      "claim_id": 198,
+      "doc_id": 2177022,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.046728186309337616
+    },
+    {
+      "claim_id": 208,
+      "doc_id": 13519661,
+      "label": "SUPPORT",
+      "prob": 0.5183498859405518
+    },
+    {
+      "claim_id": 212,
+      "doc_id": 22038539,
+      "label": "CONTRADICT",
+      "prob": 0.5266757607460022
+    },
+    {
+      "claim_id": 213,
+      "doc_id": 13625993,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.01996932551264763
+    },
+    {
+      "claim_id": 216,
+      "doc_id": 21366394,
+      "label": "CONTRADICT",
+      "prob": 0.10789568722248077
+    },
+    {
+      "claim_id": 217,
+      "doc_id": 21366394,
+      "label": "SUPPORT",
+      "prob": 0.316656231880188
+    },
+    {
+      "claim_id": 218,
+      "doc_id": 21366394,
+      "label": "SUPPORT",
+      "prob": 0.5374776721000671
+    },
+    {
+      "claim_id": 219,
+      "doc_id": 21366394,
+      "label": "CONTRADICT",
+      "prob": 0.2692866623401642
+    },
+    {
+      "claim_id": 230,
+      "doc_id": 3067015,
+      "label": "SUPPORT",
+      "prob": 0.33445650339126587
+    },
+    {
+      "claim_id": 232,
+      "doc_id": 10536636,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.004821061622351408
+    },
+    {
+      "claim_id": 233,
+      "doc_id": 4388470,
+      "label": "CONTRADICT",
+      "prob": 0.00912658590823412
+    },
+    {
+      "claim_id": 236,
+      "doc_id": 4388470,
+      "label": "SUPPORT",
+      "prob": 0.02012404426932335
+    },
+    {
+      "claim_id": 237,
+      "doc_id": 4942718,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.010415584780275822
+    },
+    {
+      "claim_id": 238,
+      "doc_id": 2251426,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0047148908488452435
+    },
+    {
+      "claim_id": 239,
+      "doc_id": 14079881,
+      "label": "SUPPORT",
+      "prob": 0.41257479786872864
+    },
+    {
+      "claim_id": 248,
+      "doc_id": 1568684,
+      "label": "SUPPORT",
+      "prob": 0.9459743499755859
+    },
+    {
+      "claim_id": 249,
+      "doc_id": 1568684,
+      "label": "CONTRADICT",
+      "prob": 0.07911442220211029
+    },
+    {
+      "claim_id": 261,
+      "doc_id": 1122279,
+      "label": "SUPPORT",
+      "prob": 0.18284963071346283
+    },
+    {
+      "claim_id": 261,
+      "doc_id": 10697096,
+      "label": "SUPPORT",
+      "prob": 0.2299395501613617
+    },
+    {
+      "claim_id": 268,
+      "doc_id": 970012,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.06143000349402428
+    },
+    {
+      "claim_id": 269,
+      "doc_id": 970012,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0708186998963356
+    },
+    {
+      "claim_id": 274,
+      "doc_id": 11614737,
+      "label": "CONTRADICT",
+      "prob": 0.15433962643146515
+    },
+    {
+      "claim_id": 275,
+      "doc_id": 4961038,
+      "label": "SUPPORT",
+      "prob": 0.7364609837532043
+    },
+    {
+      "claim_id": 275,
+      "doc_id": 14241418,
+      "label": "SUPPORT",
+      "prob": 0.006354125682264566
+    },
+    {
+      "claim_id": 279,
+      "doc_id": 14376683,
+      "label": "SUPPORT",
+      "prob": 0.4578208327293396
+    },
+    {
+      "claim_id": 294,
+      "doc_id": 10874408,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.008315208368003368
+    },
+    {
+      "claim_id": 295,
+      "doc_id": 20310709,
+      "label": "SUPPORT",
+      "prob": 0.652252197265625
+    },
+    {
+      "claim_id": 298,
+      "doc_id": 39381118,
+      "label": "SUPPORT",
+      "prob": 0.231607586145401
+    },
+    {
+      "claim_id": 300,
+      "doc_id": 3553087,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.07538586109876633
+    },
+    {
+      "claim_id": 303,
+      "doc_id": 4388470,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0153229720890522
+    },
+    {
+      "claim_id": 312,
+      "doc_id": 6173523,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.04154405742883682
+    },
+    {
+      "claim_id": 314,
+      "doc_id": 4347374,
+      "label": "SUPPORT",
+      "prob": 0.01991390623152256
+    },
+    {
+      "claim_id": 324,
+      "doc_id": 2014909,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0034950864501297474
+    },
+    {
+      "claim_id": 327,
+      "doc_id": 17997584,
+      "label": "SUPPORT",
+      "prob": 0.9839721918106079
+    },
+    {
+      "claim_id": 338,
+      "doc_id": 23349986,
+      "label": "CONTRADICT",
+      "prob": 0.3490496277809143
+    },
+    {
+      "claim_id": 343,
+      "doc_id": 5884524,
+      "label": "SUPPORT",
+      "prob": 0.009654820896685123
+    },
+    {
+      "claim_id": 350,
+      "doc_id": 16927286,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.014371883124113083
+    },
+    {
+      "claim_id": 354,
+      "doc_id": 8774475,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.04255898296833038
+    },
+    {
+      "claim_id": 362,
+      "doc_id": 38587347,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.011319942772388458
+    },
+    {
+      "claim_id": 380,
+      "doc_id": 19005293,
+      "label": "SUPPORT",
+      "prob": 0.9682393670082092
+    },
+    {
+      "claim_id": 384,
+      "doc_id": 13770184,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.014658674597740173
+    },
+    {
+      "claim_id": 385,
+      "doc_id": 9955779,
+      "label": "SUPPORT",
+      "prob": 0.20050741732120514
+    },
+    {
+      "claim_id": 386,
+      "doc_id": 16495649,
+      "label": "SUPPORT",
+      "prob": 0.2509744465351105
+    },
+    {
+      "claim_id": 388,
+      "doc_id": 1148122,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.004235477186739445
+    },
+    {
+      "claim_id": 399,
+      "doc_id": 791050,
+      "label": "SUPPORT",
+      "prob": 0.9444172978401184
+    },
+    {
+      "claim_id": 410,
+      "doc_id": 14924526,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.03791266679763794
+    },
+    {
+      "claim_id": 411,
+      "doc_id": 14924526,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.020783286541700363
+    },
+    {
+      "claim_id": 415,
+      "doc_id": 6309659,
+      "label": "SUPPORT",
+      "prob": 0.8862744569778442
+    },
+    {
+      "claim_id": 421,
+      "doc_id": 11172205,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.004054786637425423
+    },
+    {
+      "claim_id": 431,
+      "doc_id": 28937856,
+      "label": "SUPPORT",
+      "prob": 0.03834255784749985
+    },
+    {
+      "claim_id": 436,
+      "doc_id": 14637235,
+      "label": "SUPPORT",
+      "prob": 0.13684630393981934
+    },
+    {
+      "claim_id": 437,
+      "doc_id": 18399038,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0033860269468277693
+    },
+    {
+      "claim_id": 439,
+      "doc_id": 4423559,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0276920348405838
+    },
+    {
+      "claim_id": 440,
+      "doc_id": 4423559,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.029819905757904053
+    },
+    {
+      "claim_id": 443,
+      "doc_id": 10165258,
+      "label": "SUPPORT",
+      "prob": 0.9805034399032593
+    },
+    {
+      "claim_id": 452,
+      "doc_id": 12804937,
+      "label": "CONTRADICT",
+      "prob": 0.005202298052608967
+    },
+    {
+      "claim_id": 452,
+      "doc_id": 464511,
+      "label": "CONTRADICT",
+      "prob": 0.02600853145122528
+    },
+    {
+      "claim_id": 475,
+      "doc_id": 18678095,
+      "label": "SUPPORT",
+      "prob": 0.7699708938598633
+    },
+    {
+      "claim_id": 478,
+      "doc_id": 14767844,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.007934458553791046
+    },
+    {
+      "claim_id": 491,
+      "doc_id": 56893404,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.004435603506863117
+    },
+    {
+      "claim_id": 501,
+      "doc_id": 17930286,
+      "label": "SUPPORT",
+      "prob": 0.5129081010818481
+    },
+    {
+      "claim_id": 502,
+      "doc_id": 13071728,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.01006359700113535
+    },
+    {
+      "claim_id": 507,
+      "doc_id": 30774694,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.06409138441085815
+    },
+    {
+      "claim_id": 508,
+      "doc_id": 13980338,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.003720248583704233
+    },
+    {
+      "claim_id": 513,
+      "doc_id": 13230773,
+      "label": "CONTRADICT",
+      "prob": 0.051820673048496246
+    },
+    {
+      "claim_id": 514,
+      "doc_id": 16256507,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.007504836190491915
+    },
+    {
+      "claim_id": 516,
+      "doc_id": 29564505,
+      "label": "CONTRADICT",
+      "prob": 0.045534517616033554
+    },
+    {
+      "claim_id": 517,
+      "doc_id": 15663829,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.026775363832712173
+    },
+    {
+      "claim_id": 521,
+      "doc_id": 34873974,
+      "label": "SUPPORT",
+      "prob": 0.3470515012741089
+    },
+    {
+      "claim_id": 525,
+      "doc_id": 13639330,
+      "label": "SUPPORT",
+      "prob": 0.04579431936144829
+    },
+    {
+      "claim_id": 527,
+      "doc_id": 3863543,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.004238681867718697
+    },
+    {
+      "claim_id": 528,
+      "doc_id": 5476778,
+      "label": "SUPPORT",
+      "prob": 0.33304035663604736
+    },
+    {
+      "claim_id": 532,
+      "doc_id": 12991445,
+      "label": "CONTRADICT",
+      "prob": 0.040849823504686356
+    },
+    {
+      "claim_id": 533,
+      "doc_id": 12991445,
+      "label": "SUPPORT",
+      "prob": 0.21754270792007446
+    },
+    {
+      "claim_id": 535,
+      "doc_id": 39368721,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.20743733644485474
+    },
+    {
+      "claim_id": 536,
+      "doc_id": 16056514,
+      "label": "SUPPORT",
+      "prob": 0.9738455414772034
+    },
+    {
+      "claim_id": 539,
+      "doc_id": 13282296,
+      "label": "SUPPORT",
+      "prob": 0.9088746905326843
+    },
+    {
+      "claim_id": 540,
+      "doc_id": 11886686,
+      "label": "SUPPORT",
+      "prob": 0.10344648361206055
+    },
+    {
+      "claim_id": 544,
+      "doc_id": 24221369,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.016503755003213882
+    },
+    {
+      "claim_id": 549,
+      "doc_id": 9433958,
+      "label": "SUPPORT",
+      "prob": 0.9815273880958557
+    },
+    {
+      "claim_id": 551,
+      "doc_id": 33499189,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.007831872440874577
+    },
+    {
+      "claim_id": 552,
+      "doc_id": 1471041,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.010217538103461266
+    },
+    {
+      "claim_id": 554,
+      "doc_id": 1049501,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.006818469613790512
+    },
+    {
+      "claim_id": 560,
+      "doc_id": 40096222,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.008717534132301807
+    },
+    {
+      "claim_id": 569,
+      "doc_id": 23460562,
+      "label": "SUPPORT",
+      "prob": 0.9773449897766113
+    },
+    {
+      "claim_id": 575,
+      "doc_id": 10300888,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.006144576705992222
+    },
+    {
+      "claim_id": 577,
+      "doc_id": 5289038,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.009915120899677277
+    },
+    {
+      "claim_id": 578,
+      "doc_id": 8764879,
+      "label": "CONTRADICT",
+      "prob": 0.03622593358159065
+    },
+    {
+      "claim_id": 587,
+      "doc_id": 16999023,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.00405114283785224
+    },
+    {
+      "claim_id": 589,
+      "doc_id": 10984005,
+      "label": "SUPPORT",
+      "prob": 0.9060323238372803
+    },
+    {
+      "claim_id": 593,
+      "doc_id": 19675911,
+      "label": "SUPPORT",
+      "prob": 0.004501725547015667
+    },
+    {
+      "claim_id": 597,
+      "doc_id": 12779444,
+      "label": "SUPPORT",
+      "prob": 0.9747712016105652
+    },
+    {
+      "claim_id": 597,
+      "doc_id": 36355784,
+      "label": "SUPPORT",
+      "prob": 0.9777929782867432
+    },
+    {
+      "claim_id": 597,
+      "doc_id": 25742130,
+      "label": "SUPPORT",
+      "prob": 0.9010761380195618
+    },
+    {
+      "claim_id": 598,
+      "doc_id": 25742130,
+      "label": "CONTRADICT",
+      "prob": 0.019281748682260513
+    },
+    {
+      "claim_id": 613,
+      "doc_id": 9638032,
+      "label": "SUPPORT",
+      "prob": 0.9610244035720825
+    },
+    {
+      "claim_id": 619,
+      "doc_id": 20888849,
+      "label": "CONTRADICT",
+      "prob": 0.01622788980603218
+    },
+    {
+      "claim_id": 623,
+      "doc_id": 17000834,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.00575419794768095
+    },
+    {
+      "claim_id": 628,
+      "doc_id": 24512064,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.21436280012130737
+    },
+    {
+      "claim_id": 636,
+      "doc_id": 24294572,
+      "label": "SUPPORT",
+      "prob": 0.16587229073047638
+    },
+    {
+      "claim_id": 637,
+      "doc_id": 25649714,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.015475774183869362
+    },
+    {
+      "claim_id": 641,
+      "doc_id": 5912283,
+      "label": "SUPPORT",
+      "prob": 0.9566459059715271
+    },
+    {
+      "claim_id": 644,
+      "doc_id": 13619127,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.21494613587856293
+    },
+    {
+      "claim_id": 649,
+      "doc_id": 12789595,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.004197109490633011
+    },
+    {
+      "claim_id": 659,
+      "doc_id": 1215116,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.006679774262011051
+    },
+    {
+      "claim_id": 660,
+      "doc_id": 1215116,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.005690631922334433
+    },
+    {
+      "claim_id": 674,
+      "doc_id": 2095573,
+      "label": "CONTRADICT",
+      "prob": 0.13963191211223602
+    },
+    {
+      "claim_id": 684,
+      "doc_id": 4942718,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.007391347549855709
+    },
+    {
+      "claim_id": 690,
+      "doc_id": 18750453,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0046376329846680164
+    },
+    {
+      "claim_id": 691,
+      "doc_id": 10991183,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.014851029962301254
+    },
+    {
+      "claim_id": 692,
+      "doc_id": 24088502,
+      "label": "CONTRADICT",
+      "prob": 0.0462399423122406
+    },
+    {
+      "claim_id": 693,
+      "doc_id": 24088502,
+      "label": "SUPPORT",
+      "prob": 0.20268990099430084
+    },
+    {
+      "claim_id": 700,
+      "doc_id": 4350400,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.013305802829563618
+    },
+    {
+      "claim_id": 702,
+      "doc_id": 4350400,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.012188161723315716
+    },
+    {
+      "claim_id": 715,
+      "doc_id": 18421962,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.007889934815466404
+    },
+    {
+      "claim_id": 716,
+      "doc_id": 18421962,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.012735676020383835
+    },
+    {
+      "claim_id": 718,
+      "doc_id": 17587795,
+      "label": "CONTRADICT",
+      "prob": 0.02321951650083065
+    },
+    {
+      "claim_id": 721,
+      "doc_id": 1834762,
+      "label": "SUPPORT",
+      "prob": 0.9708230495452881
+    },
+    {
+      "claim_id": 723,
+      "doc_id": 5531479,
+      "label": "SUPPORT",
+      "prob": 0.9593493342399597
+    },
+    {
+      "claim_id": 727,
+      "doc_id": 7521113,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.004765565041452646
+    },
+    {
+      "claim_id": 728,
+      "doc_id": 36444198,
+      "label": "CONTRADICT",
+      "prob": 0.01443904172629118
+    },
+    {
+      "claim_id": 729,
+      "doc_id": 26851674,
+      "label": "SUPPORT",
+      "prob": 0.8693761825561523
+    },
+    {
+      "claim_id": 742,
+      "doc_id": 32159283,
+      "label": "SUPPORT",
+      "prob": 0.8599015474319458
+    },
+    {
+      "claim_id": 743,
+      "doc_id": 32159283,
+      "label": "CONTRADICT",
+      "prob": 0.05721630901098251
+    },
+    {
+      "claim_id": 744,
+      "doc_id": 8460275,
+      "label": "SUPPORT",
+      "prob": 0.035505954176187515
+    },
+    {
+      "claim_id": 756,
+      "doc_id": 2831620,
+      "label": "SUPPORT",
+      "prob": 0.631752073764801
+    },
+    {
+      "claim_id": 759,
+      "doc_id": 1805641,
+      "label": "CONTRADICT",
+      "prob": 0.0736880749464035
+    },
+    {
+      "claim_id": 768,
+      "doc_id": 6421792,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.014846441335976124
+    },
+    {
+      "claim_id": 770,
+      "doc_id": 15476777,
+      "label": "SUPPORT",
+      "prob": 0.01891379803419113
+    },
+    {
+      "claim_id": 775,
+      "doc_id": 32275758,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.012956486083567142
+    },
+    {
+      "claim_id": 781,
+      "doc_id": 24338780,
+      "label": "CONTRADICT",
+      "prob": 0.04822078347206116
+    },
+    {
+      "claim_id": 783,
+      "doc_id": 40632104,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.012687621638178825
+    },
+    {
+      "claim_id": 784,
+      "doc_id": 2356950,
+      "label": "SUPPORT",
+      "prob": 0.5054628252983093
+    },
+    {
+      "claim_id": 785,
+      "doc_id": 12471115,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0061179897747933865
+    },
+    {
+      "claim_id": 793,
+      "doc_id": 8551160,
+      "label": "CONTRADICT",
+      "prob": 0.05867765471339226
+    },
+    {
+      "claim_id": 800,
+      "doc_id": 22543403,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.059019189327955246
+    },
+    {
+      "claim_id": 805,
+      "doc_id": 22180793,
+      "label": "SUPPORT",
+      "prob": 0.8901991248130798
+    },
+    {
+      "claim_id": 808,
+      "doc_id": 36606083,
+      "label": "SUPPORT",
+      "prob": 0.05360256880521774
+    },
+    {
+      "claim_id": 811,
+      "doc_id": 19799455,
+      "label": "CONTRADICT",
+      "prob": 0.012149745598435402
+    },
+    {
+      "claim_id": 814,
+      "doc_id": 33387953,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.09696798771619797
+    },
+    {
+      "claim_id": 820,
+      "doc_id": 8646760,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.012595697306096554
+    },
+    {
+      "claim_id": 821,
+      "doc_id": 8646760,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.008603468537330627
+    },
+    {
+      "claim_id": 823,
+      "doc_id": 15319019,
+      "label": "SUPPORT",
+      "prob": 0.47284767031669617
+    },
+    {
+      "claim_id": 830,
+      "doc_id": 1897324,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.009000264108181
+    },
+    {
+      "claim_id": 831,
+      "doc_id": 1897324,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.009321661666035652
+    },
+    {
+      "claim_id": 832,
+      "doc_id": 30303335,
+      "label": "SUPPORT",
+      "prob": 0.018823452293872833
+    },
+    {
+      "claim_id": 834,
+      "doc_id": 5483793,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.01230814028531313
+    },
+    {
+      "claim_id": 837,
+      "doc_id": 15928989,
+      "label": "SUPPORT",
+      "prob": 0.7291867733001709
+    },
+    {
+      "claim_id": 839,
+      "doc_id": 1469751,
+      "label": "SUPPORT",
+      "prob": 0.9563275575637817
+    },
+    {
+      "claim_id": 845,
+      "doc_id": 17741440,
+      "label": "SUPPORT",
+      "prob": 0.971445620059967
+    },
+    {
+      "claim_id": 847,
+      "doc_id": 16787954,
+      "label": "CONTRADICT",
+      "prob": 0.0331837460398674
+    },
+    {
+      "claim_id": 852,
+      "doc_id": 13843341,
+      "label": "CONTRADICT",
+      "prob": 0.017275653779506683
+    },
+    {
+      "claim_id": 859,
+      "doc_id": 1982286,
+      "label": "CONTRADICT",
+      "prob": 0.027629394084215164
+    },
+    {
+      "claim_id": 870,
+      "doc_id": 195689316,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.7491664886474609
+    },
+    {
+      "claim_id": 873,
+      "doc_id": 1180972,
+      "label": "CONTRADICT",
+      "prob": 0.052214477211236954
+    },
+    {
+      "claim_id": 873,
+      "doc_id": 19307912,
+      "label": "CONTRADICT",
+      "prob": 0.047921322286129
+    },
+    {
+      "claim_id": 873,
+      "doc_id": 27393799,
+      "label": "CONTRADICT",
+      "prob": 0.06711053103208542
+    },
+    {
+      "claim_id": 873,
+      "doc_id": 29025270,
+      "label": "CONTRADICT",
+      "prob": 0.07636956125497818
+    },
+    {
+      "claim_id": 873,
+      "doc_id": 3315558,
+      "label": "CONTRADICT",
+      "prob": 0.037025488913059235
+    },
+    {
+      "claim_id": 879,
+      "doc_id": 8426046,
+      "label": "CONTRADICT",
+      "prob": 0.052563223987817764
+    },
+    {
+      "claim_id": 880,
+      "doc_id": 8426046,
+      "label": "SUPPORT",
+      "prob": 0.9518565535545349
+    },
+    {
+      "claim_id": 882,
+      "doc_id": 14803797,
+      "label": "CONTRADICT",
+      "prob": 0.057068292051553726
+    },
+    {
+      "claim_id": 887,
+      "doc_id": 18855191,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.012461166828870773
+    },
+    {
+      "claim_id": 903,
+      "doc_id": 10648422,
+      "label": "CONTRADICT",
+      "prob": 0.048749104142189026
+    },
+    {
+      "claim_id": 904,
+      "doc_id": 7370282,
+      "label": "SUPPORT",
+      "prob": 0.9441529512405396
+    },
+    {
+      "claim_id": 907,
+      "doc_id": 6923961,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.12537868320941925
+    },
+    {
+      "claim_id": 911,
+      "doc_id": 11254556,
+      "label": "SUPPORT",
+      "prob": 0.14554479718208313
+    },
+    {
+      "claim_id": 913,
+      "doc_id": 3203590,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.007082454860210419
+    },
+    {
+      "claim_id": 914,
+      "doc_id": 3203590,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.01263407152146101
+    },
+    {
+      "claim_id": 921,
+      "doc_id": 1642727,
+      "label": "SUPPORT",
+      "prob": 0.9850125312805176
+    },
+    {
+      "claim_id": 922,
+      "doc_id": 17077004,
+      "label": "CONTRADICT",
+      "prob": 0.23055575788021088
+    },
+    {
+      "claim_id": 936,
+      "doc_id": 5483793,
+      "label": "SUPPORT",
+      "prob": 0.9787198901176453
+    },
+    {
+      "claim_id": 956,
+      "doc_id": 12956194,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.12361004203557968
+    },
+    {
+      "claim_id": 957,
+      "doc_id": 123859,
+      "label": "SUPPORT",
+      "prob": 0.9385643005371094
+    },
+    {
+      "claim_id": 960,
+      "doc_id": 8780599,
+      "label": "SUPPORT",
+      "prob": 0.9419776797294617
+    },
+    {
+      "claim_id": 967,
+      "doc_id": 8997410,
+      "label": "SUPPORT",
+      "prob": 0.7298890948295593
+    },
+    {
+      "claim_id": 971,
+      "doc_id": 46695481,
+      "label": "SUPPORT",
+      "prob": 0.05090102180838585
+    },
+    {
+      "claim_id": 971,
+      "doc_id": 27873158,
+      "label": "SUPPORT",
+      "prob": 0.13383503258228302
+    },
+    {
+      "claim_id": 971,
+      "doc_id": 28617573,
+      "label": "SUPPORT",
+      "prob": 0.02524704858660698
+    },
+    {
+      "claim_id": 971,
+      "doc_id": 9764256,
+      "label": "SUPPORT",
+      "prob": 0.04409487918019295
+    },
+    {
+      "claim_id": 975,
+      "doc_id": 5304891,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.02602289244532585
+    },
+    {
+      "claim_id": 982,
+      "doc_id": 2988714,
+      "label": "SUPPORT",
+      "prob": 0.31127384305000305
+    },
+    {
+      "claim_id": 985,
+      "doc_id": 6828370,
+      "label": "SUPPORT",
+      "prob": 0.04059625044465065
+    },
+    {
+      "claim_id": 993,
+      "doc_id": 16472469,
+      "label": "CONTRADICT",
+      "prob": 0.9266840219497681
+    },
+    {
+      "claim_id": 1012,
+      "doc_id": 9745001,
+      "label": "SUPPORT",
+      "prob": 0.9725630283355713
+    },
+    {
+      "claim_id": 1014,
+      "doc_id": 6277638,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.031572453677654266
+    },
+    {
+      "claim_id": 1019,
+      "doc_id": 11603066,
+      "label": "SUPPORT",
+      "prob": 0.037101514637470245
+    },
+    {
+      "claim_id": 1020,
+      "doc_id": 9433958,
+      "label": "SUPPORT",
+      "prob": 0.04894191771745682
+    },
+    {
+      "claim_id": 1021,
+      "doc_id": 9433958,
+      "label": "CONTRADICT",
+      "prob": 0.018129175528883934
+    },
+    {
+      "claim_id": 1024,
+      "doc_id": 5373138,
+      "label": "SUPPORT",
+      "prob": 0.16639629006385803
+    },
+    {
+      "claim_id": 1029,
+      "doc_id": 13923140,
+      "label": "CONTRADICT",
+      "prob": 0.024767296388745308
+    },
+    {
+      "claim_id": 1029,
+      "doc_id": 13940200,
+      "label": "CONTRADICT",
+      "prob": 0.024438736960291862
+    },
+    {
+      "claim_id": 1029,
+      "doc_id": 11899391,
+      "label": "CONTRADICT",
+      "prob": 0.034198299050331116
+    },
+    {
+      "claim_id": 1041,
+      "doc_id": 25254425,
+      "label": "CONTRADICT",
+      "prob": 0.008716022595763206
+    },
+    {
+      "claim_id": 1049,
+      "doc_id": 12486491,
+      "label": "CONTRADICT",
+      "prob": 0.019656922668218613
+    },
+    {
+      "claim_id": 1062,
+      "doc_id": 20381484,
+      "label": "SUPPORT",
+      "prob": 0.8933030366897583
+    },
+    {
+      "claim_id": 1086,
+      "doc_id": 39281140,
+      "label": "SUPPORT",
+      "prob": 0.9371487498283386
+    },
+    {
+      "claim_id": 1088,
+      "doc_id": 37549932,
+      "label": "CONTRADICT",
+      "prob": 0.13476118445396423
+    },
+    {
+      "claim_id": 1089,
+      "doc_id": 17628888,
+      "label": "SUPPORT",
+      "prob": 0.3881731331348419
+    },
+    {
+      "claim_id": 1099,
+      "doc_id": 7662206,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.17556272447109222
+    },
+    {
+      "claim_id": 1100,
+      "doc_id": 7662206,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.048418279737234116
+    },
+    {
+      "claim_id": 1104,
+      "doc_id": 3898784,
+      "label": "SUPPORT",
+      "prob": 0.3162069618701935
+    },
+    {
+      "claim_id": 1107,
+      "doc_id": 20532591,
+      "label": "SUPPORT",
+      "prob": 0.8972687721252441
+    },
+    {
+      "claim_id": 1110,
+      "doc_id": 13770184,
+      "label": "CONTRADICT",
+      "prob": 0.022525090724229813
+    },
+    {
+      "claim_id": 1121,
+      "doc_id": 4456756,
+      "label": "SUPPORT",
+      "prob": 0.4106217324733734
+    },
+    {
+      "claim_id": 1130,
+      "doc_id": 17997584,
+      "label": "CONTRADICT",
+      "prob": 0.12470445036888123
+    },
+    {
+      "claim_id": 1132,
+      "doc_id": 33499189,
+      "label": "SUPPORT",
+      "prob": 0.0947507694363594
+    },
+    {
+      "claim_id": 1137,
+      "doc_id": 33370,
+      "label": "CONTRADICT",
+      "prob": 0.09345225989818573
+    },
+    {
+      "claim_id": 1140,
+      "doc_id": 12009265,
+      "label": "CONTRADICT",
+      "prob": 0.020289987325668335
+    },
+    {
+      "claim_id": 1144,
+      "doc_id": 10071552,
+      "label": "CONTRADICT",
+      "prob": 0.0309178214520216
+    },
+    {
+      "claim_id": 1146,
+      "doc_id": 13906581,
+      "label": "SUPPORT",
+      "prob": 0.6288586854934692
+    },
+    {
+      "claim_id": 1150,
+      "doc_id": 11369420,
+      "label": "SUPPORT",
+      "prob": 0.7993704080581665
+    },
+    {
+      "claim_id": 1163,
+      "doc_id": 15305881,
+      "label": "SUPPORT",
+      "prob": 0.05524008348584175
+    },
+    {
+      "claim_id": 1175,
+      "doc_id": 31272411,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.010817275382578373
+    },
+    {
+      "claim_id": 1179,
+      "doc_id": 31272411,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.00920052919536829
+    },
+    {
+      "claim_id": 1180,
+      "doc_id": 31272411,
+      "label": "SUPPORT",
+      "prob": 0.4743465185165405
+    },
+    {
+      "claim_id": 1185,
+      "doc_id": 16737210,
+      "label": "SUPPORT",
+      "prob": 0.5114082098007202
+    },
+    {
+      "claim_id": 1187,
+      "doc_id": 52873726,
+      "label": "SUPPORT",
+      "prob": 0.2587742805480957
+    },
+    {
+      "claim_id": 1191,
+      "doc_id": 30655442,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0030418219976127148
+    },
+    {
+      "claim_id": 1194,
+      "doc_id": 11419230,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.03213809058070183
+    },
+    {
+      "claim_id": 1196,
+      "doc_id": 25649714,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.00949797872453928
+    },
+    {
+      "claim_id": 1197,
+      "doc_id": 25649714,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.010503116063773632
+    },
+    {
+      "claim_id": 1199,
+      "doc_id": 16760369,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.013257734477519989
+    },
+    {
+      "claim_id": 1200,
+      "doc_id": 3441524,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.022791163995862007
+    },
+    {
+      "claim_id": 1202,
+      "doc_id": 3475317,
+      "label": "SUPPORT",
+      "prob": 0.5785559415817261
+    },
+    {
+      "claim_id": 1204,
+      "doc_id": 31141365,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0067099593579769135
+    },
+    {
+      "claim_id": 1207,
+      "doc_id": 18909530,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.010958993807435036
+    },
+    {
+      "claim_id": 1213,
+      "doc_id": 14407673,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.02212255634367466
+    },
+    {
+      "claim_id": 1216,
+      "doc_id": 24142891,
+      "label": "SUPPORT",
+      "prob": 0.9771526455879211
+    },
+    {
+      "claim_id": 1221,
+      "doc_id": 19736671,
+      "label": "CONTRADICT",
+      "prob": 0.20768310129642487
+    },
+    {
+      "claim_id": 1225,
+      "doc_id": 9650982,
+      "label": "SUPPORT",
+      "prob": 0.5443170070648193
+    },
+    {
+      "claim_id": 1226,
+      "doc_id": 13777138,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.017281444743275642
+    },
+    {
+      "claim_id": 1232,
+      "doc_id": 13905670,
+      "label": "CONTRADICT",
+      "prob": 0.0783054530620575
+    },
+    {
+      "claim_id": 1241,
+      "doc_id": 4427392,
+      "label": "SUPPORT",
+      "prob": 0.7035602927207947
+    },
+    {
+      "claim_id": 1245,
+      "doc_id": 7662395,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.013248915784060955
+    },
+    {
+      "claim_id": 1245,
+      "doc_id": 7662395,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.013248915784060955
+    },
+    {
+      "claim_id": 1259,
+      "doc_id": 24341590,
+      "label": "SUPPORT",
+      "prob": 0.9227229356765747
+    },
+    {
+      "claim_id": 1262,
+      "doc_id": 44172171,
+      "label": "SUPPORT",
+      "prob": 0.9777743816375732
+    },
+    {
+      "claim_id": 1266,
+      "doc_id": 37480103,
+      "label": "SUPPORT",
+      "prob": 0.09566923975944519
+    },
+    {
+      "claim_id": 1270,
+      "doc_id": 13900610,
+      "label": "CONTRADICT",
+      "prob": 0.037784382700920105
+    },
+    {
+      "claim_id": 1271,
+      "doc_id": 13768432,
+      "label": "SUPPORT",
+      "prob": 0.0997074544429779
+    },
+    {
+      "claim_id": 1272,
+      "doc_id": 17081238,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.006429227069020271
+    },
+    {
+      "claim_id": 1273,
+      "doc_id": 11041152,
+      "label": "SUPPORT",
+      "prob": 0.9727737903594971
+    },
+    {
+      "claim_id": 1274,
+      "doc_id": 4406819,
+      "label": "SUPPORT",
+      "prob": 0.10928472131490707
+    },
+    {
+      "claim_id": 1278,
+      "doc_id": 11335781,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.015989702194929123
+    },
+    {
+      "claim_id": 1279,
+      "doc_id": 11335781,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.08916110545396805
+    },
+    {
+      "claim_id": 1280,
+      "doc_id": 4387784,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.013048549182713032
+    },
+    {
+      "claim_id": 1281,
+      "doc_id": 4387784,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.007168501149863005
+    },
+    {
+      "claim_id": 1282,
+      "doc_id": 23649163,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.031079385429620743
+    },
+    {
+      "claim_id": 1290,
+      "doc_id": 4687948,
+      "label": "SUPPORT",
+      "prob": 0.25190696120262146
+    },
+    {
+      "claim_id": 1292,
+      "doc_id": 56893404,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.04278384521603584
+    },
+    {
+      "claim_id": 1298,
+      "doc_id": 11718220,
+      "label": "SUPPORT",
+      "prob": 0.030251765623688698
+    },
+    {
+      "claim_id": 1303,
+      "doc_id": 12631697,
+      "label": "CONTRADICT",
+      "prob": 0.005555669777095318
+    },
+    {
+      "claim_id": 1316,
+      "doc_id": 27910499,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0031933363061398268
+    },
+    {
+      "claim_id": 1319,
+      "doc_id": 16284655,
+      "label": "SUPPORT",
+      "prob": 0.9662050604820251
+    },
+    {
+      "claim_id": 1320,
+      "doc_id": 16284655,
+      "label": "CONTRADICT",
+      "prob": 0.018679458647966385
+    },
+    {
+      "claim_id": 1332,
+      "doc_id": 5304891,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.012108220718801022
+    },
+    {
+      "claim_id": 1335,
+      "doc_id": 27910499,
+      "label": "SUPPORT",
+      "prob": 0.013182676397264004
+    },
+    {
+      "claim_id": 1336,
+      "doc_id": 27910499,
+      "label": "CONTRADICT",
+      "prob": 0.01202636118978262
+    },
+    {
+      "claim_id": 1337,
+      "doc_id": 20231138,
+      "label": "SUPPORT",
+      "prob": 0.02305203676223755
+    },
+    {
+      "claim_id": 1339,
+      "doc_id": 15482274,
+      "label": "CONTRADICT",
+      "prob": 0.06235043704509735
+    },
+    {
+      "claim_id": 1344,
+      "doc_id": 9559146,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.05222514271736145
+    },
+    {
+      "claim_id": 1352,
+      "doc_id": 12885341,
+      "label": "SUPPORT",
+      "prob": 0.45044028759002686
+    },
+    {
+      "claim_id": 1359,
+      "doc_id": 11614737,
+      "label": "CONTRADICT",
+      "prob": 0.21774837374687195
+    },
+    {
+      "claim_id": 1362,
+      "doc_id": 8290953,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.006112607661634684
+    },
+    {
+      "claim_id": 1363,
+      "doc_id": 8290953,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.014287345111370087
+    },
+    {
+      "claim_id": 1368,
+      "doc_id": 2425364,
+      "label": "SUPPORT",
+      "prob": 0.2928069829940796
+    },
+    {
+      "claim_id": 1370,
+      "doc_id": 2425364,
+      "label": "CONTRADICT",
+      "prob": 0.08263925462961197
+    },
+    {
+      "claim_id": 1379,
+      "doc_id": 16322674,
+      "label": "SUPPORT",
+      "prob": 0.9723913073539734
+    },
+    {
+      "claim_id": 1379,
+      "doc_id": 27123743,
+      "label": "SUPPORT",
+      "prob": 0.9595052599906921
+    },
+    {
+      "claim_id": 1379,
+      "doc_id": 23557241,
+      "label": "SUPPORT",
+      "prob": 0.9894710779190063
+    },
+    {
+      "claim_id": 1379,
+      "doc_id": 17450673,
+      "label": "SUPPORT",
+      "prob": 0.9755443334579468
+    },
+    {
+      "claim_id": 1382,
+      "doc_id": 17755060,
+      "label": "CONTRADICT",
+      "prob": 0.5676676630973816
+    },
+    {
+      "claim_id": 1385,
+      "doc_id": 306006,
+      "label": "SUPPORT",
+      "prob": 0.15833404660224915
+    },
+    {
+      "claim_id": 1389,
+      "doc_id": 23895668,
+      "label": "SUPPORT",
+      "prob": 0.39343854784965515
+    },
+    {
+      "claim_id": 1395,
+      "doc_id": 17717391,
+      "label": "NOT_ENOUGH_INFO",
+      "prob": 0.0034518660977482796
+    }
+  ]
+}
