@@ -7,10 +7,13 @@ misremembered id — DECISIONS.md), downloads the PDFs, POSTs each to
 
 Run with the stack up (`docker compose up -d`) from the repo root:
     pip install -r scripts/requirements.txt
-    python scripts/seed_demo_corpus.py
+    python scripts/seed_demo_corpus.py                    # today's top matches
+    python scripts/seed_demo_corpus.py --from-golden-set  # the golden set's papers
 """
 
+import argparse
 import json
+import os
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -18,7 +21,8 @@ from pathlib import Path
 
 import httpx
 
-API_BASE = "http://localhost:8000/api"
+API_BASE = os.environ.get("RAGFORGE_API", "http://localhost:8000/api")
+GOLDEN_SET = Path(__file__).resolve().parent.parent / "eval-datasets" / "v1" / "full.jsonl"
 ARXIV_API = "https://export.arxiv.org/api/query"
 ATOM_NS = "{http://www.w3.org/2005/Atom}"
 
@@ -61,24 +65,59 @@ def discover_papers() -> list[dict]:
             print(f"[warn] arXiv search failed for {query!r}: {e}")
             continue
 
-        for entry in root.findall(f"{ATOM_NS}entry"):
-            arxiv_id = entry.find(f"{ATOM_NS}id").text.rsplit("/", 1)[-1]
-            if arxiv_id in seen:
-                continue
-            pdf_url = next(
-                (
-                    link.get("href")
-                    for link in entry.findall(f"{ATOM_NS}link")
-                    if link.get("title") == "pdf"
-                ),
-                None,
-            )
-            if not pdf_url:
-                continue
-            title = entry.find(f"{ATOM_NS}title").text.strip().replace("\n", " ")
-            seen.add(arxiv_id)
-            papers.append({"arxiv_id": arxiv_id, "title": title, "pdf_url": pdf_url})
+        papers += _papers_in(root, seen)
         time.sleep(3)  # arXiv API etiquette: >=3s between requests
+    return papers
+
+
+def _papers_in(root: ET.Element, seen: set[str]) -> list[dict]:
+    papers = []
+    for entry in root.findall(f"{ATOM_NS}entry"):
+        arxiv_id = entry.find(f"{ATOM_NS}id").text.rsplit("/", 1)[-1]
+        if arxiv_id in seen:
+            continue
+        pdf_url = next(
+            (
+                link.get("href")
+                for link in entry.findall(f"{ATOM_NS}link")
+                if link.get("title") == "pdf"
+            ),
+            None,
+        )
+        if not pdf_url:
+            continue
+        title = entry.find(f"{ATOM_NS}title").text.strip().replace("\n", " ")
+        seen.add(arxiv_id)
+        papers.append({"arxiv_id": arxiv_id, "title": title, "pdf_url": pdf_url})
+    return papers
+
+
+def golden_set_papers() -> list[dict]:
+    """The exact paper versions the golden set was written against.
+
+    discover_papers() asks arXiv for today's best matches, which drift as
+    new papers appear, so a corpus seeded months later no longer contains
+    the papers the golden set's expected ids point at. Pinning them by
+    version reproduces the corpus its numbers came from."""
+    ids = sorted(
+        {
+            arxiv_id
+            for line in GOLDEN_SET.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+            for arxiv_id in json.loads(line).get("expected_arxiv_ids", [])
+        }
+    )
+    resp = httpx.get(
+        ARXIV_API,
+        params={"id_list": ",".join(ids), "max_results": len(ids)},
+        timeout=60.0,
+        follow_redirects=True,
+    )
+    resp.raise_for_status()
+    papers = _papers_in(ET.fromstring(resp.text), set())
+    missing = set(ids) - {p["arxiv_id"] for p in papers}
+    if missing:
+        print(f"[warn] arXiv returned no entry for {sorted(missing)}")
     return papers
 
 
@@ -115,10 +154,17 @@ def wait_for_ready(client: httpx.Client, document_id: str, timeout_s: int = 600)
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--from-golden-set",
+        action="store_true",
+        help="seed exactly the paper versions eval-datasets/v1 references (reproducible)",
+    )
+    args = parser.parse_args()
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    papers = discover_papers()
-    print(f"Discovered {len(papers)} unique candidate papers")
+    papers = golden_set_papers() if args.from_golden_set else discover_papers()
+    print(f"{len(papers)} papers to ingest")
 
     downloaded: list[dict] = []
     for paper in papers:
