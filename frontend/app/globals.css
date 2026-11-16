@@ -1,3 +1,167 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: light;
+    scrollbar-color: theme(colors.ink.3) theme(colors.concourse);
+  }
+
+  body {
+    @apply bg-ground font-sans text-ink antialiased;
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background: theme(colors.ink.DEFAULT);
+    color: theme(colors.ground);
+  }
+
+  :focus-visible {
+    outline: 3px solid theme(colors.ink.DEFAULT);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+  }
+
+  input,
+  textarea {
+    caret-color: theme(colors.ink.DEFAULT);
+  }
+
+  input[type="range"] {
+    accent-color: theme(colors.ink.DEFAULT);
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md px-4 text-[0.9375rem] font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-ink text-white hover:bg-ink-2 active:bg-panel;
+  }
+  .btn-secondary {
+    @apply border-2 border-ink bg-card text-ink hover:bg-concourse active:bg-rule;
+  }
+  .btn-sm {
+    @apply h-9 px-3 text-sm;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-semibold;
+  }
+  .field {
+    @apply h-11 w-full rounded-md border-2 border-ink bg-card px-3 text-base placeholder:text-ink-3 disabled:cursor-not-allowed disabled:bg-concourse;
+  }
+  textarea.field {
+    @apply h-auto py-2;
+  }
+
+  /* Tables keep their columns in fixed cells; a state change restyles a row
+     in place and never reflows the grid. */
+  .data {
+    @apply w-full table-fixed border-collapse text-[0.9375rem] tabular-nums;
+  }
+  .data th {
+    @apply border-b-2 border-ink px-3 py-2.5 text-left align-bottom text-sm font-semibold text-ink-2;
+  }
+  .data td {
+    @apply border-b border-rule px-3 py-3 align-top;
+  }
+  .data .num {
+    @apply text-right;
+  }
+
+  /* Below md a .stack table becomes one block per row: cells without a
+     data-label read as the row's heading, every other cell as label, value. */
+  @media (max-width: 767.98px) {
+    .data.stack,
+    .data.stack tbody,
+    .data.stack tr,
+    .data.stack td {
+      display: block;
+    }
+    .data.stack thead,
+    .data.stack colgroup {
+      display: none;
+    }
+    .data.stack tr {
+      @apply border-b border-rule py-3;
+    }
+    .data.stack td {
+      @apply border-0 px-0 py-1 text-left;
+    }
+    .data.stack td[data-label] {
+      @apply flex items-baseline justify-between gap-4 text-right;
+    }
+    .data.stack td[data-label]::before {
+      content: attr(data-label);
+      @apply shrink-0 text-left text-sm font-semibold text-ink-2;
+    }
+    .data.stack td.wide-only {
+      display: none;
+    }
+    .data.stack td[data-label]:empty {
+      display: none;
+    }
+  }
+
+  /* The black inset square: carries an arrow, a letter or a number. */
+  .sq {
+    @apply inline-flex shrink-0 items-center justify-center rounded bg-ink font-bold leading-none text-white;
+  }
+  .sq-sm {
+    @apply h-6 w-6 text-xs;
+  }
+  .sq-md {
+    @apply h-9 w-9 text-base;
+  }
+  .sq-lg {
+    @apply h-12 w-12 text-xl;
+  }
+
+  .locator {
+    @apply inline-flex h-7 items-center gap-1 rounded bg-sign pl-1 pr-2 text-sm font-bold text-white transition-colors duration-150 hover:bg-sign-press;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded bg-concourse;
+  }
+}
+
+/* The one authored motion: a sign swaps its message like a split-flap band. */
+@keyframes flap {
+  from {
+    transform: perspective(600px) rotateX(-80deg);
+    opacity: 0;
+  }
+  to {
+    transform: perspective(600px) rotateX(0);
+    opacity: 1;
+  }
+}
+.flap-in {
+  transform-origin: top center;
+  animation: flap 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flap-in,
+  .skeleton {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

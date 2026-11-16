@@ -8,7 +8,8 @@ Built as a phase-by-phase engineering project. Every phase closes with a measure
 
 - **Hybrid retrieval**: dense (pgvector HNSW) + sparse (BM25 over Postgres full-text lexemes) fused with Reciprocal Rank Fusion, then cross-encoder reranking (MiniLM), over parent-child hierarchical chunks.
 - **Grounded generation**: local LLM (Qwen3-4B via Ollama) answers with per-sentence citations back to source chunks, with fabricated citation IDs filtered out.
-- **Eval harness**: a curated 117-item golden set (single-hop / multi-hop / unanswerable / adversarial), retrieval + generation + LLM-as-judge metrics with bootstrap 95% confidence intervals, a persisted eval-run history, and an Evaluations UI.
+- **Eval harness**: a curated 117-item golden set (single-hop / multi-hop / unanswerable / adversarial), retrieval + generation + LLM-as-judge metrics with bootstrap 95% confidence intervals, a persisted eval-run history, and a Golden set page to read it.
+- **Checked answers in the UI**: every answer sentence shows its verdict and links to the passage it was checked against; a withheld answer shows the sources it found instead.
 - **CI regression gate**: `.github/workflows/evals.yml` ingests a fixture corpus and queries it end-to-end on every PR — a real retrieval regression fails the build automatically.
 - **Session-aware querying**: conversational query rewriting and a Redis-backed semantic cache with corpus-version invalidation.
 
@@ -21,7 +22,7 @@ FastAPI (async) ─┬─ PostgreSQL 16 + pgvector (HNSW, halfvec)  — dense + 
                   ├─ Redis                                     — semantic cache + Celery broker
                   ├─ Celery worker                              — ingestion, eval runs
                   └─ Ollama (host)                               — local LLM generation + judging
-Next.js (App Router, TypeScript) ── Evaluations UI, Retrieval Inspector, chat
+Next.js (App Router, TypeScript) ── Query · Inspect · Measure · Improve
 ```
 
 | Layer | Choice |
@@ -73,7 +74,8 @@ backend/app/
   generation/     citation-grounded answer generation
   evals/          golden-set runner, metrics, bootstrap CI, LLM judge
   providers/      swappable LLM/embedding/reranker interfaces
-frontend/app/     Next.js routes (chat, Evaluations, Retrieval Inspector)
+frontend/app/     Next.js routes: Query (/); Inspect: Candidates, Timeline;
+                  Measure: Golden set, A/B, Metrics; Improve: Feedback loop, Trust settings
 eval-datasets/    versioned golden sets (full / calibration / CI subset)
 baselines/        stored metric baselines CI gates compare against
 document/         per-phase build notes + resume bullets
