@@ -86,9 +86,28 @@ class Settings(BaseSettings):
 
     # --- Retrieval (SPEC.md §7.1) ---
     DENSE_TOP_K: int = 50
-    SPARSE_TOP_K: int = 50
+    SPARSE_TOP_K: int = 0
+    """BM25 candidates fused with dense ones by RRF; 0 turns keyword search off.
+    Off by default because fusing it never helped the final ranking where it
+    was measured: SciDocs and ArguAna (worse, significantly), the project's
+    own golden set (no change), and it costs 0.3-0.9 s per question
+    (DECISIONS.md 2026-11-16). Set 50 to bring it back."""
     RRF_K: int = 60
+    DENSE_FEEDBACK_DOCS: int = 0
+    """Pseudo-relevance feedback: when > 0, the query embedding is moved toward
+    the centroid of its top-N dense results (DENSE_FEEDBACK_WEIGHT) and dense
+    search runs again. 0 is off: on the dev split it gained on one benchmark
+    and lost on the other (DECISIONS.md 2026-11-16)."""
+    DENSE_FEEDBACK_WEIGHT: float = 0.5
     RERANK_CANDIDATES: int = 50
+    RERANK_LIFT_THRESHOLD: float | None = 4.0
+    """The reranker abstains below this cross-encoder logit: candidates it
+    scores at or above it move up in its order, the rest keep fusion order
+    (app.retrieval.pipeline.apply_rerank). None makes its order final, as it
+    used to be. 4.0 was chosen on SciDocs and ArguAna dev splits plus the golden
+    set: full reranking cost 0.04 and 0.17 NDCG@10 on the two benchmarks,
+    while this keeps (and slightly exceeds) its gain on the golden set
+    (DECISIONS.md 2026-11-16)."""
     FINAL_TOP_K: int = 8
     MAX_CONTEXT_TOKENS: int = 6000
     HYDE: bool = False

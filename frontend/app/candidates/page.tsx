@@ -148,8 +148,9 @@ export default function Candidates({
               <div>
                 <dt className="inline font-bold text-ink">BM25. </dt>
                 <dd className="inline">
-                  Keyword score over the passage&apos;s lexemes. A dash means no word of the
-                  question put it in the keyword list.
+                  Keyword score over the passage&apos;s lexemes. Keyword search is off by
+                  default (it did not improve the final ranking on any benchmark), so this
+                  column shows dashes unless SPARSE_TOP_K is set.
                 </dd>
               </div>
               <div>
@@ -159,8 +160,9 @@ export default function Candidates({
               <div>
                 <dt className="inline font-bold text-ink">Rerank. </dt>
                 <dd className="inline">
-                  The cross-encoder&apos;s score for question and passage read together. It sets
-                  the final order.
+                  The cross-encoder&apos;s score for question and passage read together.
+                  Passages it scores at 4 or more move to the top in its order; it abstains on
+                  the rest, which keep the fused order.
                 </dd>
               </div>
             </dl>

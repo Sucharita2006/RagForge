@@ -75,13 +75,13 @@ const STAGES = [
     key: "retrieve",
     name: "Retrieve",
     typical: "< 1 s",
-    what: "Dense search and BM25 each propose passages; the two lists are fused.",
+    what: "Dense search proposes the 50 passages closest in meaning.",
   },
   {
     key: "rerank",
     name: "Rerank",
     typical: "~8 s",
-    what: "A cross-encoder rereads every candidate against the question.",
+    what: "A cross-encoder rereads them and moves up the ones it is sure of.",
   },
   {
     key: "generate",

@@ -4,7 +4,7 @@ from opentelemetry import trace
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.retrieval.dense import dense_search
+from app.retrieval.dense import dense_search, embedding_of, feedback_query
 from app.retrieval.fusion import FusedCandidate, reciprocal_rank_fusion
 from app.retrieval.rerankers.minilm import get_reranker_provider
 from app.retrieval.rerankers.registry import active_reranker_path
@@ -14,6 +14,27 @@ settings = get_settings()
 tracer = trace.get_tracer(__name__)
 
 
+def is_lifted(candidate: FusedCandidate, threshold: float | None) -> bool:
+    """Whether the cross-encoder may move this candidate: always without a
+    threshold, otherwise only when it scored it at or above the threshold."""
+    score = candidate.rerank_score
+    return score is not None and (threshold is None or score >= threshold)
+
+
+def apply_rerank(candidates: list[FusedCandidate], threshold: float | None) -> list[FusedCandidate]:
+    """Order reranked candidates (given in fusion order).
+
+    With no threshold the cross-encoder's order is final, as it always was.
+    With one, the reranker abstains where it is not confident: candidates it
+    scores at or above the threshold go first, in its order, and every other
+    candidate keeps the order fusion gave it. On out-of-domain public
+    benchmarks the MS MARCO cross-encoder's low-confidence reorderings cost
+    more than they gained (DECISIONS.md 2026-11-16)."""
+    lifted = [c for c in candidates if is_lifted(c, threshold)]
+    lifted.sort(key=lambda c: c.rerank_score or 0.0, reverse=True)
+    return lifted + [c for c in candidates if not is_lifted(c, threshold)]
+
+
 async def retrieve(
     db: AsyncSession,
     query_text: str,
@@ -21,9 +42,10 @@ async def retrieve(
     document_id: uuid.UUID | None = None,
     reranker_path: str | None = None,
 ) -> list[FusedCandidate]:
-    """Full retrieval pipeline (SPEC.md §3.2 steps 3-6): dense + sparse ->
-    RRF fusion -> cross-encoder rerank -> top RERANK_CANDIDATES, reordered
-    by rerank score. Powers both /api/retrieve (debug, all four score types)
+    """Full retrieval pipeline (SPEC.md §3.2 steps 3-6): dense (+ sparse when
+    SPARSE_TOP_K > 0) -> RRF fusion -> cross-encoder rerank of the top
+    RERANK_CANDIDATES, which moves up only the candidates it is confident about
+    (apply_rerank). Powers both /api/retrieve (debug, all four score types)
     and /api/query (context assembly consumes the top slice).
 
     `reranker_path` overrides the registry's active model for this call only.
@@ -33,7 +55,20 @@ async def retrieve(
     dense_results = await dense_search(
         db, query_embedding, settings.DENSE_TOP_K, settings.HNSW_EF_SEARCH, document_id
     )
-    sparse_results = await sparse_search(db, query_text, settings.SPARSE_TOP_K, document_id)
+    if settings.DENSE_FEEDBACK_DOCS:
+        feedback = [embedding_of(c) for c, _ in dense_results[: settings.DENSE_FEEDBACK_DOCS]]
+        dense_results = await dense_search(
+            db,
+            feedback_query(query_embedding, feedback, settings.DENSE_FEEDBACK_WEIGHT),
+            settings.DENSE_TOP_K,
+            settings.HNSW_EF_SEARCH,
+            document_id,
+        )
+    sparse_results = (
+        await sparse_search(db, query_text, settings.SPARSE_TOP_K, document_id)
+        if settings.SPARSE_TOP_K
+        else []
+    )
 
     fused = reciprocal_rank_fusion(dense_results, sparse_results, settings.RRF_K)
     candidates = fused[: settings.RERANK_CANDIDATES]
@@ -52,9 +87,10 @@ async def retrieve(
             scores = reranker.rerank(query_text, [c.chunk.content for c in candidates])
             for candidate, score in zip(candidates, scores, strict=True):
                 candidate.rerank_score = score
-            candidates.sort(
-                key=lambda c: c.rerank_score if c.rerank_score is not None else float("-inf"),
-                reverse=True,
+            candidates[:] = apply_rerank(candidates, settings.RERANK_LIFT_THRESHOLD)
+            rerank_span.set_attribute(
+                "reranker.lifted",
+                sum(1 for c in candidates if is_lifted(c, settings.RERANK_LIFT_THRESHOLD)),
             )
             # top-k doc ids/scores only: the full 50-candidate list would
             # bloat every stored span for detail nobody reads in a waterfall.
