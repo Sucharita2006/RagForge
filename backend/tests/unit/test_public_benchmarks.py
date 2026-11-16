@@ -14,6 +14,7 @@ from scripts.scifact_checker import (
     auroc,
     balanced_accuracy,
     build_pairs,
+    choose_threshold,
     summarize,
 )
 
@@ -96,6 +97,16 @@ def test_scifact_pairs_take_the_evidence_label_or_not_enough_info() -> None:
     pairs = build_pairs(claims, corpus)
     assert [(p.claim_id, p.doc_id, p.label) for p in pairs] == [(7, 1, CONTRADICT), (8, 2, NEI)]
     assert pairs[0].premise == "T1\nA. B."
+
+
+def test_checker_threshold_maximises_balanced_accuracy_within_the_precision_floor() -> None:
+    labels = [SUPPORT, SUPPORT, SUPPORT, SUPPORT, NEI, NEI, CONTRADICT, NEI]
+    probs = [0.9, 0.7, 0.35, 0.15, 0.3, 0.05, 0.02, 0.2]
+    chosen, sweep = choose_threshold(labels, probs, min_precision=0.9)
+    # 0.32-0.34 pass the three highest SUPPORT pairs and nothing else: precision 1.0
+    assert chosen == 0.34
+    below = next(row for row in sweep if row["threshold"] == 0.3)
+    assert below["precision"] < 0.9  # at 0.30 the NEI pair at 0.30 passes too
 
 
 def test_checker_metrics() -> None:

@@ -63,7 +63,7 @@ Every answer sentence is checked against the passage it cites (MiniCheck, thresh
 | Abstract contradicts it (71) | 4.2% [0.0, 9.9] |
 | Abstract says neither (114) | 0.9% [0.0, 2.6] |
 
-When it says "supported" it is right 95% [90, 99] of the time (AUROC 0.90), but it misses 44% of claims that are supported. That strictness is the measured cause of the project's high unsupported-claim rate.
+When it says "supported" it is right 95% [90, 99] of the time (AUROC 0.90), but it misses 44% of claims that are supported. That strictness is the measured cause of the project's high unsupported-claim rate. A threshold chosen on SciFact's train split, with "supported" required to be right at least 90% of the time, came out at the same 0.5: passing more supported claims would cost precision, so the threshold stays.
 
 ### Golden set
 
@@ -131,7 +131,7 @@ Full decision-by-decision engineering log: [`DECISIONS.md`](DECISIONS.md).
 
 ## Roadmap
 
-- **Calibrate the claim checker's threshold**: SciFact shows MiniCheck at 0.5 is right when it says "supported" but misses 44% of supported claims; choose the threshold on SciFact's train split and confirm on dev.
+- **Pass more supported claims without loosening the checker**: on SciFact, MiniCheck at 0.5 misses 44% of supported claims, and a lower threshold costs precision. Next to try: a stronger checker model, or scoring against the cited chunk with its neighbours.
 - **Phase 7, red-teaming**: the attack-success-rate target is still unmeasured (see [`SPEC.md`](SPEC.md) §10 and [`document/implementation-plan.md`](document/implementation-plan.md)).
 
 ## License

@@ -8,17 +8,24 @@ that checker on data it was not tuned for; this does.
 SciFact (Wadden et al., 2020) pairs scientific claims with paper abstracts
 that experts marked as supporting or contradicting them, and claims with no
 evidence cite an abstract that does neither. Each (claim, abstract) pair of
-the labelled dev split goes through the production provider and threshold.
-A "supported" verdict is right only for SUPPORT pairs.
+a labelled split goes through the production provider and threshold. A
+"supported" verdict is right only for SUPPORT pairs.
 
-    docker compose run --rm api python -m scripts.scifact_checker
+    docker compose run --rm api python -m scripts.scifact_checker score --split dev
+    docker compose run --rm api python -m scripts.scifact_checker score --split train
+    docker compose run --rm api python -m scripts.scifact_checker threshold
 
-Writes eval-datasets/benchmarks/scifact-checker.json: the summary plus one
-row per pair (ids, label, probability; no SciFact text).
+`score` writes eval-datasets/benchmarks/scifact-checker-<split>.json: the
+summary at the configured threshold plus one row per pair (ids, label,
+probability; no SciFact text). `threshold` chooses a threshold on the train
+split alone (the highest balanced accuracy whose precision stays at or above
+MIN_PRECISION) and reports it on dev, which played no part in choosing.
 """
 
+import argparse
 import io
 import json
+import math
 import random
 import shutil
 import tarfile
@@ -39,6 +46,9 @@ DATA = next(
     p for p in (BACKEND / "eval-datasets", BACKEND.parent / "eval-datasets") if (p / "v1").is_dir()
 )
 SUPPORT, CONTRADICT, NEI = "SUPPORT", "CONTRADICT", "NOT_ENOUGH_INFO"
+# A "supported" verdict must stay right at least this often: the checker's
+# job is to keep unsupported sentences from passing as supported.
+MIN_PRECISION = 0.90
 
 
 @dataclass(frozen=True)
@@ -50,8 +60,8 @@ class Pair:
     premise: str
 
 
-def read_release() -> tuple[list[dict], dict[int, dict]]:
-    """Labelled dev claims and the abstract corpus, read straight out of the
+def read_release(split: str) -> tuple[list[dict], dict[int, dict]]:
+    """A labelled split's claims and the abstract corpus, read straight out of the
     cached archive (nothing is extracted to disk)."""
     archive = DATA / "downloads" / "scifact-release.tar.gz"
     if not archive.exists():
@@ -69,7 +79,7 @@ def read_release() -> tuple[list[dict], dict[int, dict]]:
             assert raw is not None, f"{member} missing from {archive.name}"
             return [json.loads(line) for line in io.TextIOWrapper(raw, encoding="utf-8") if line]
 
-        claims = rows("data/claims_dev.jsonl")
+        claims = rows(f"data/claims_{split}.jsonl")
         corpus = {doc["doc_id"]: doc for doc in rows("data/corpus.jsonl")}
     return claims, corpus
 
@@ -157,10 +167,39 @@ def summarize(labels: list[str], probs: list[float], threshold: float) -> dict:
     }
 
 
-def main() -> None:
-    claims, corpus = read_release()
+def choose_threshold(
+    labels: list[str], probs: list[float], min_precision: float = MIN_PRECISION
+) -> tuple[float, list[dict]]:
+    """The threshold with the highest balanced accuracy among those whose
+    "supported" verdicts are right at least `min_precision` of the time
+    (ties go to the higher, stricter threshold), and the whole sweep."""
+    sweep = []
+    for step in range(1, 50):
+        t = step / 50
+        judged = [p >= t for p in probs]
+        passed = [label for label, j in zip(labels, judged, strict=True) if j]
+        support = [j for label, j in zip(labels, judged, strict=True) if label == SUPPORT]
+        sweep.append(
+            {
+                "threshold": t,
+                "balanced_accuracy": balanced_accuracy(labels, judged),
+                "precision": sum(lab == SUPPORT for lab in passed) / len(passed)
+                if passed
+                else math.nan,
+                "recall": sum(support) / len(support) if support else math.nan,
+            }
+        )
+    eligible = [row for row in sweep if row["precision"] >= min_precision]
+    if not eligible:
+        raise SystemExit(f"no threshold keeps precision at {min_precision}")
+    best = max(eligible, key=lambda row: (row["balanced_accuracy"], row["threshold"]))
+    return best["threshold"], sweep
+
+
+def score(split: str) -> None:
+    claims, corpus = read_release(split)
     pairs = build_pairs(claims, corpus)
-    print(f"{len(claims)} dev claims -> {len(pairs)} (claim, abstract) pairs", flush=True)
+    print(f"{len(claims)} {split} claims -> {len(pairs)} (claim, abstract) pairs", flush=True)
 
     checker = get_minicheck_provider()
     probs: list[float] = []
@@ -171,9 +210,9 @@ def main() -> None:
 
     summary = summarize([p.label for p in pairs], probs, settings.MINICHECK_SUPPORT_THRESHOLD) | {
         "checker": checker.model_name,
-        "dataset": "SciFact dev, release/latest",
+        "dataset": f"SciFact {split}, release/latest",
     }
-    out = DATA / "benchmarks" / "scifact-checker.json"
+    out = DATA / "benchmarks" / f"scifact-checker-{split}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
         json.dumps(
@@ -190,6 +229,53 @@ def main() -> None:
     )
     print(json.dumps(summary, indent=2))
     print(f"wrote {out}")
+
+
+def threshold() -> None:
+    def scored(split: str) -> tuple[list[str], list[float]]:
+        rows = json.loads((DATA / "benchmarks" / f"scifact-checker-{split}.json").read_text())
+        return [r["label"] for r in rows["pairs"]], [r["prob"] for r in rows["pairs"]]
+
+    train_labels, train_probs = scored("train")
+    chosen, sweep = choose_threshold(train_labels, train_probs)
+    dev_labels, dev_probs = scored("dev")
+    result = {
+        "rule": f"highest train balanced accuracy with precision >= {MIN_PRECISION}",
+        "chosen": chosen,
+        "train": summarize(train_labels, train_probs, chosen),
+        "dev_at_chosen": summarize(dev_labels, dev_probs, chosen),
+        "dev_at_current": summarize(dev_labels, dev_probs, settings.MINICHECK_SUPPORT_THRESHOLD),
+        "train_sweep": sweep,
+    }
+    out = DATA / "benchmarks" / "scifact-checker-threshold.json"
+    out.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    print(f"chosen on train: {chosen}")
+    for name in ("dev_at_current", "dev_at_chosen"):
+        r = result[name]
+        by = r["judged_supported_by_label"]
+        print(
+            f"{name}: threshold {r['threshold']}, supported passed {by[SUPPORT]['mean']:.3f}, "
+            f"contradicted passed {by[CONTRADICT]['mean']:.3f}, "
+            f"neither passed {by[NEI]['mean']:.3f}, "
+            f"precision {r['precision_of_supported']['mean']:.3f}, "
+            f"balanced accuracy {r['balanced_accuracy']['mean']:.3f} "
+            f"{r['balanced_accuracy']['ci95']}"
+        )
+    print(f"wrote {out}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("score").add_argument("--split", choices=("dev", "train"), default="dev")
+    sub.add_parser("threshold")
+    args = parser.parse_args()
+    if args.command == "score":
+        score(args.split)
+    else:
+        threshold()
 
 
 if __name__ == "__main__":

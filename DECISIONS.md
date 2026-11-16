@@ -357,7 +357,18 @@ On the 70% held-out split: ArguAna 0.600, SciDocs 0.193. Both beat every system 
 | CONTRADICT (71) | 4.2% [0.0, 9.9] |
 | NOT_ENOUGH_INFO (114) | 0.9% [0.0, 2.6] |
 
-Precision of a "supported" verdict 95.1% [90.1, 98.8], balanced accuracy 0.768 [0.724, 0.810], AUROC 0.904 [0.868, 0.936]. The checker almost never passes a claim it should not, but it rejects 44% of claims that are supported. This is the measured cause of the 0.398 unsupported-claim rate (2026-08-06) and of the trust layer's under-confidence (ECE). Because the scores rank well (AUROC 0.90), the threshold is the lever: choose it on SciFact's train split and confirm on dev, without changing the model. Per-pair results (ids and probabilities, no SciFact text) are in `eval-datasets/benchmarks/scifact-checker.json`.
+Precision of a "supported" verdict 95.1% [90.1, 98.8], balanced accuracy 0.768 [0.724, 0.810], AUROC 0.904 [0.868, 0.936]. The checker almost never passes a claim it should not, but it rejects 44% of claims that are supported. This is the measured cause of the 0.398 unsupported-claim rate (2026-08-06) and of the trust layer's under-confidence (ECE). Per-pair results (ids and probabilities, no SciFact text) are in `eval-datasets/benchmarks/scifact-checker-dev.json`.
+
+**The threshold is not the lever.** The scores rank well (AUROC 0.90), so a lower threshold looked like a free way to pass more supported claims. `scifact_checker.py threshold` chose it on SciFact's train split alone (894 pairs), by the rule the checker exists for: the highest balanced accuracy whose "supported" verdicts stay right at least 90% of the time. The rule picked 0.5, the value already in use; at 0.46 train precision is 0.897, already under the floor. So dev is unchanged. What a lower threshold would buy, on train:
+
+| Threshold | Supported claims passed | Precision of "supported" | Balanced accuracy |
+|---|---|---|---|
+| 0.5 (current) | 53.8% | 90.0% | 0.748 |
+| 0.4 | 60.5% | 88.9% | 0.776 |
+| 0.3 | 66.8% | 86.7% | 0.798 |
+| 0.1 | 78.9% | 77.2% | 0.813 |
+
+Balanced accuracy keeps rising as the threshold drops, but only by letting more contradicted and unsupported claims through, which is the failure the checker is there to prevent. The threshold stays at 0.5. Passing more supported claims needs a stronger checker model, or more context around the cited chunk, not a looser threshold. Sweep and both summaries: `eval-datasets/benchmarks/scifact-checker-threshold.json`.
 
 ## 2026-11-16 — Ingestion and reproducibility fixes found while rebuilding the corpus
 
